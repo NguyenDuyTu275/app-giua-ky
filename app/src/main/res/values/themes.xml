@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.GpaPlanner" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- Giao diện chung (sáng và tối); Android 12+ dùng màu động theo hình nền máy -->
+    <style name="Base.Theme.GpaPlanner" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="materialCardViewStyle">@style/Widget.Material3.CardView.Filled</item>
+    </style>
+
+    <style name="Theme.GpaPlanner" parent="Base.Theme.GpaPlanner">
+        <item name="colorPrimary">#1E5AA8</item>
+    </style>
 </resources>

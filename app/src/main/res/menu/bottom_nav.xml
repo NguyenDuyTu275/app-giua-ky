@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_dashboard"
+        android:icon="@drawable/ic_home"
+        android:title="Tổng quan" />
+    <item
+        android:id="@+id/nav_gradebook"
+        android:icon="@drawable/ic_list"
+        android:title="Bảng điểm" />
+    <item
+        android:id="@+id/nav_simulator"
+        android:icon="@drawable/ic_star"
+        android:title="Kế hoạch" />
+    <item
+        android:id="@+id/nav_curriculum"
+        android:icon="@drawable/ic_date_range"
+        android:title="Chương trình" />
+    <item
+        android:id="@+id/nav_advisor"
+        android:icon="@drawable/ic_chat"
+        android:title="Cố vấn AI" />
+</menu>

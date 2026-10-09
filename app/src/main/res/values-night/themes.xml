@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Nền tối: giữ màu chính mặc định (sáng hơn) để đủ tương phản -->
+    <style name="Theme.GpaPlanner" parent="Base.Theme.GpaPlanner" />
+</resources>
