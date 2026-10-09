@@ -1,8 +1,13 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
 }
+
+// Thông tin khóa ký bản release, không có trong git (xem .gitignore)
+val keystoreFile = rootProject.file("keystore.properties")
 
 android {
     namespace = "com.example.gpaplanner"
@@ -11,17 +16,31 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.gpaplanner"
+        applicationId = "com.appgiuaky.gpaplanner"
         minSdk = 26
         targetSdk = 37
         versionCode = 1
         versionName = "1.0"
     }
 
+    signingConfigs {
+        // Máy clone repo mà không có keystore vẫn build được bản debug
+        if (keystoreFile.exists()) {
+            val props = Properties().apply { keystoreFile.inputStream().use(::load) }
+            create("release") {
+                storeFile = rootProject.file(props.getProperty("storeFile"))
+                storePassword = props.getProperty("storePassword")
+                keyAlias = props.getProperty("keyAlias")
+                keyPassword = props.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
+            signingConfig = signingConfigs.findByName("release")
             optimization {
-                enable = false
+                enable = true
             }
         }
     }

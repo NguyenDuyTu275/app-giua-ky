@@ -10,3 +10,6 @@
 .cxx
 local.properties
 Claude.md
+# Khóa ký bản release: không bao giờ đẩy lên git
+*.jks
+keystore.properties
