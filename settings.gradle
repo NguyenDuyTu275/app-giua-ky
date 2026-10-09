@@ -20,4 +20,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "GpaPlanner"
-include(":app")
+include ':app'
