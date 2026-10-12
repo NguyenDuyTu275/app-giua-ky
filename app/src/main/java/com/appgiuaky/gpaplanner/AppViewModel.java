@@ -102,12 +102,15 @@ public class AppViewModel extends AndroidViewModel {
     /** Ghi dữ liệu hiện tại ra file và báo cho các màn hình vẽ lại. */
     private void save() {
         AcademicData d = current();
-        try (OutputStream out = new FileOutputStream(file)) {
-            out.write(d.toJson().getBytes(StandardCharsets.UTF_8));
-        } catch (IOException | JSONException e) {
-            throw new IllegalStateException("Không lưu được bảng điểm", e);
-        }
-        data.setValue(d);
+        executor.execute(() -> {
+            try (OutputStream out = new FileOutputStream(file)) {
+                out.write(d.toJson().getBytes(StandardCharsets.UTF_8));
+                data.postValue(d);
+            } catch (IOException | JSONException e) {
+                // Log or handle error gracefully in background thread
+                e.printStackTrace();
+            }
+        });
     }
 
     private Semester semester(String id) {
