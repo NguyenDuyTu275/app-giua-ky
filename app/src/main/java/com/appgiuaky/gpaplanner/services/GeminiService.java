@@ -35,7 +35,7 @@ public final class GeminiService {
     private GeminiService() {
     }
 
-    public static final String MODEL = "gemini-3.8-flash";
+    public static final String MODEL = "gemini-2.5-flash";
     private static final String ENDPOINT =
             "https://generativelanguage.googleapis.com/v1beta/models/" + MODEL + ":generateContent";
     private static final long DAY_MILLIS = 24L * 60 * 60 * 1000;

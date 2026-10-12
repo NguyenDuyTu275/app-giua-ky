@@ -110,8 +110,8 @@ public final class ExcelIO {
         try {
             List<String> shared = sharedBytes == null ? new ArrayList<String>() : parseSharedStrings(sharedBytes);
             rows = parseSheet(sheet, shared);
-        } catch (XmlPullParserException e) {
-            throw new IllegalArgumentException("File Excel bị lỗi: " + e.getMessage());
+        } catch (XmlPullParserException | NumberFormatException e) {
+            throw new IllegalArgumentException("File Excel bị lỗi định dạng: " + e.getMessage());
         }
 
         Map<String, List<Course>> semesters = new LinkedHashMap<>();
