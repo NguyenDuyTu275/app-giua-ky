@@ -61,6 +61,20 @@
     <string name="chart_tooltip_semester">GPA kỳ: %1$s</string>
     <string name="chart_tooltip_cumulative">Tích lũy: %1$s</string>
 
+    <!-- Tài khoản (đăng nhập Google) -->
+    <string name="account_title">Tài khoản</string>
+    <string name="account_signed_out">Chưa đăng nhập</string>
+    <string name="account_note">Đăng nhập chỉ để hiện tên và ảnh của bạn trong app. Bảng điểm vẫn chỉ lưu trên máy này.</string>
+    <string name="sign_in_google">Đăng nhập bằng Google</string>
+    <string name="sign_out">Đăng xuất</string>
+    <string name="close">Đóng</string>
+    <string name="greeting">Xin chào, %1$s</string>
+    <string name="signed_in_as">Đã đăng nhập: %1$s</string>
+    <string name="signed_out">Đã đăng xuất</string>
+    <string name="sign_in_not_configured">Chưa cấu hình đăng nhập Google: thêm GOOGLE_WEB_CLIENT_ID vào local.properties rồi build lại.</string>
+    <string name="sign_in_no_account">Máy chưa có tài khoản Google. Thêm tài khoản trong Cài đặt rồi thử lại.</string>
+    <string name="sign_in_failed">Đăng nhập thất bại: %1$s</string>
+
     <!-- Giao diện sáng / tối -->
     <string name="theme_title">Giao diện</string>
     <string-array name="theme_options">

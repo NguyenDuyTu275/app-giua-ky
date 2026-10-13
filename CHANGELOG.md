@@ -25,6 +25,22 @@
 - **Xóa môn có nút Hoàn tác:** xóa môn là xóa ngay, kèm Snackbar có nút "Hoàn tác". Xóa môn **không còn hỏi xác nhận**; xóa học kỳ vẫn hỏi như cũ.
 - **Giảm vẽ lại thừa:** thêm `components/TabFragment.java`. Tab đang ẩn chỉ vẽ lại khi được mở. Chat chỉ thêm tin nhắn mới, không vẽ lại cả cuộc trò chuyện.
 
+### Đăng nhập bằng Google
+
+- Nút tài khoản trên thanh tiêu đề tab Tổng quan, mở hộp thoại để đăng nhập hoặc đăng xuất. Đã đăng nhập thì nút hiện ảnh đại diện (hoặc chữ cái đầu của tên) và tiêu đề có thêm dòng "Xin chào, <tên>".
+- Đăng nhập **chỉ để hiển thị**: tên và email lưu trong máy, ảnh đại diện lưu thành file trong máy. Bảng điểm không gắn với tài khoản và không gửi lên mạng.
+- Dùng Credential Manager của Android (`AccountViewModel`, `components/account/AccountUi.java`, `services/AvatarStore.java`), **không dùng Firebase**. Thêm 3 thư viện: `androidx.credentials:credentials` và `credentials-play-services-auth` 1.6.0, `com.google.android.libraries.identity.googleid:googleid` 1.2.1.
+- Thêm `UserProfileTest` (tổng 31 test).
+- Chưa làm đăng nhập Facebook.
+
+**Cài đặt (mỗi người tự làm một lần, cần tài khoản Google):**
+1. Vào Google Cloud Console, tạo project rồi cấu hình **OAuth consent screen**. Khi app còn ở chế độ Testing, thêm email của các thành viên vào danh sách Test users.
+2. Tạo **OAuth client ID** loại **Android**: package `com.appgiuaky.gpaplanner`, SHA-1 lấy từ khóa debug trên máy mình bằng lệnh `keytool -list -v -keystore %USERPROFILE%\.android\debug.keystore -alias androiddebugkey -storepass android`. Mỗi máy build có SHA-1 riêng, nên phải thêm SHA-1 của từng máy.
+3. Tạo thêm **OAuth client ID** loại **Web application**, rồi chép Client ID của nó vào `local.properties`: `GOOGLE_WEB_CLIENT_ID=xxxx.apps.googleusercontent.com`. Sau đó build lại.
+4. Máy ảo hoặc điện thoại phải có Google Play và đã thêm một tài khoản Google.
+
+Chưa cấu hình mà bấm đăng nhập thì app chỉ báo "Chưa cấu hình đăng nhập Google", không bị crash.
+
 ### Cố vấn AI
 
 - **Đổi model sang `gemini-3.8-flash`:** Google không còn cấp `gemini-2.5-flash` cho người dùng mới, nên key tạo gần đây bị từ chối.

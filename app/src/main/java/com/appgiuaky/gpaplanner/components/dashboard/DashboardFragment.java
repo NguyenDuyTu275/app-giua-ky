@@ -12,16 +12,19 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.appgiuaky.gpaplanner.AccountViewModel;
 import com.appgiuaky.gpaplanner.AppViewModel;
 import com.appgiuaky.gpaplanner.R;
 import com.appgiuaky.gpaplanner.ThemeSettings;
 import com.appgiuaky.gpaplanner.components.TabFragment;
 import com.appgiuaky.gpaplanner.components.Ui;
+import com.appgiuaky.gpaplanner.components.account.AccountUi;
 import com.appgiuaky.gpaplanner.types.AcademicData;
 import com.appgiuaky.gpaplanner.types.Course;
 import com.appgiuaky.gpaplanner.types.CourseStatus;
 import com.appgiuaky.gpaplanner.types.LetterGrade;
 import com.appgiuaky.gpaplanner.types.Semester;
+import com.appgiuaky.gpaplanner.types.UserProfile;
 import com.appgiuaky.gpaplanner.utils.Format;
 import com.appgiuaky.gpaplanner.utils.GpaCalculator;
 import com.google.android.material.appbar.MaterialToolbar;
@@ -35,6 +38,9 @@ import java.util.List;
 /** Chức năng 4: thẻ thống kê, biểu đồ đường GPA theo kỳ và biểu đồ tròn phân bố điểm chữ. */
 public class DashboardFragment extends TabFragment {
 
+    /** Cỡ ảnh đại diện trên thanh tiêu đề, vừa với vùng chạm 48dp của nút. */
+    private static final int TOOLBAR_AVATAR_DP = 28;
+
     private View view;
 
     @Override
@@ -47,10 +53,14 @@ public class DashboardFragment extends TabFragment {
         this.view = view;
         MaterialToolbar toolbar = view.findViewById(R.id.toolbar);
         toolbar.inflateMenu(R.menu.menu_dashboard);
+        AccountViewModel accountVm = new ViewModelProvider(requireActivity()).get(AccountViewModel.class);
         toolbar.setOnMenuItemClickListener(item -> {
-            showThemeDialog();
+            if (item.getItemId() == R.id.action_account) AccountUi.showDialog(this, accountVm);
+            else showThemeDialog();
             return true;
         });
+        accountVm.getAccount().observe(getViewLifecycleOwner(), profile -> showAccount(toolbar, accountVm));
+        accountVm.getAvatar().observe(getViewLifecycleOwner(), avatar -> showAccount(toolbar, accountVm));
         highlight(R.id.stat_gpa4);
 
         LineChartView lineChart = view.findViewById(R.id.line_chart);
@@ -62,6 +72,15 @@ public class DashboardFragment extends TabFragment {
 
         AppViewModel vm = new ViewModelProvider(requireActivity()).get(AppViewModel.class);
         observeWhenVisible(vm.getData(), this::render);
+    }
+
+    /** Đã đăng nhập: lời chào dưới tiêu đề và ảnh đại diện thay cho icon tài khoản. */
+    private void showAccount(MaterialToolbar toolbar, AccountViewModel accountVm) {
+        UserProfile profile = accountVm.getAccount().getValue();
+        toolbar.setSubtitle(profile == null ? null : getString(R.string.greeting, profile.displayName()));
+        // Context của thanh tiêu đề để icon mặc định được tô trắng như các icon khác trên nền đỏ
+        toolbar.getMenu().findItem(R.id.action_account).setIcon(AccountUi.avatar(toolbar.getContext(),
+                accountVm.getAvatar().getValue(), profile, TOOLBAR_AVATAR_DP, true));
     }
 
     private void showThemeDialog() {
