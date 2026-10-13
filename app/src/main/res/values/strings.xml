@@ -57,6 +57,14 @@
     <string name="pie_legend_item">%1$s: %2$d môn (%3$d%%)</string>
     <string name="course_count">%1$d môn</string>
 
+    <!-- Giao diện sáng / tối -->
+    <string name="theme_title">Giao diện</string>
+    <string-array name="theme_options">
+        <item>Theo hệ thống</item>
+        <item>Sáng</item>
+        <item>Tối</item>
+    </string-array>
+
     <!-- Bảng điểm -->
     <string name="gradebook_empty">Chưa có học kỳ nào. Bấm + để thêm học kỳ, hoặc nhập từ file Excel.</string>
     <string name="add_semester">Thêm học kỳ</string>

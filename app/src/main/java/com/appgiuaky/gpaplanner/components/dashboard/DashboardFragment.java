@@ -13,6 +13,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.appgiuaky.gpaplanner.AppViewModel;
 import com.appgiuaky.gpaplanner.R;
+import com.appgiuaky.gpaplanner.ThemeSettings;
 import com.appgiuaky.gpaplanner.components.TabFragment;
 import com.appgiuaky.gpaplanner.components.Ui;
 import com.appgiuaky.gpaplanner.types.AcademicData;
@@ -22,6 +23,9 @@ import com.appgiuaky.gpaplanner.types.LetterGrade;
 import com.appgiuaky.gpaplanner.types.Semester;
 import com.appgiuaky.gpaplanner.utils.Format;
 import com.appgiuaky.gpaplanner.utils.GpaCalculator;
+import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
 
 import java.util.ArrayList;
@@ -40,6 +44,14 @@ public class DashboardFragment extends TabFragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle state) {
         this.view = view;
+        MaterialToolbar toolbar = view.findViewById(R.id.toolbar);
+        toolbar.inflateMenu(R.menu.menu_dashboard);
+        toolbar.setOnMenuItemClickListener(item -> {
+            showThemeDialog();
+            return true;
+        });
+        highlight(R.id.stat_gpa4);
+
         LinearLayout legend = view.findViewById(R.id.line_legend);
         legend.addView(Ui.legend(requireContext(), LineChartView.SEMESTER_COLOR, getString(R.string.semester_gpa)));
         View cumulative = Ui.legend(requireContext(), LineChartView.CUMULATIVE_COLOR, getString(R.string.cumulative_gpa));
@@ -48,6 +60,27 @@ public class DashboardFragment extends TabFragment {
 
         AppViewModel vm = new ViewModelProvider(requireActivity()).get(AppViewModel.class);
         observeWhenVisible(vm.getData(), this::render);
+    }
+
+    private void showThemeDialog() {
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.theme_title)
+                .setSingleChoiceItems(R.array.theme_options, ThemeSettings.selectedIndex(requireContext()), (d, which) -> {
+                    d.dismiss();
+                    ThemeSettings.select(requireContext(), which);
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .show();
+    }
+
+    /** GPA hệ 4 là con số quan trọng nhất nên thẻ của nó dùng màu nhấn của theme. */
+    private void highlight(int statId) {
+        MaterialCardView card = view.findViewById(statId);
+        int onContainer = Ui.color(requireContext(), com.google.android.material.R.attr.colorOnPrimaryContainer);
+        card.setCardBackgroundColor(Ui.color(requireContext(), com.google.android.material.R.attr.colorPrimaryContainer));
+        ((TextView) card.findViewById(R.id.stat_title)).setTextColor(onContainer);
+        ((TextView) card.findViewById(R.id.stat_value)).setTextColor(onContainer);
+        ((TextView) card.findViewById(R.id.stat_note)).setTextColor(onContainer);
     }
 
     private void render(AcademicData data) {

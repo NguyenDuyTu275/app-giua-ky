@@ -20,7 +20,6 @@ import com.appgiuaky.gpaplanner.components.dashboard.DashboardFragment;
 import com.appgiuaky.gpaplanner.components.gradebook.GradebookFragment;
 import com.appgiuaky.gpaplanner.components.simulator.SimulatorFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
-import com.google.android.material.color.DynamicColors;
 
 /** Layout chính: thanh điều hướng dưới cùng chuyển giữa 5 màn hình (Fragment). */
 public class MainActivity extends AppCompatActivity {
@@ -33,7 +32,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        DynamicColors.applyToActivityIfAvailable(this);
+        ThemeSettings.apply(this);
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);

@@ -25,6 +25,13 @@
 - **Xóa môn có nút Hoàn tác:** xóa môn là xóa ngay, kèm Snackbar có nút "Hoàn tác". Xóa môn **không còn hỏi xác nhận**; xóa học kỳ vẫn hỏi như cũ.
 - **Giảm vẽ lại thừa:** thêm `components/TabFragment.java`. Tab đang ẩn chỉ vẽ lại khi được mở. Chat chỉ thêm tin nhắn mới, không vẽ lại cả cuộc trò chuyện.
 
+### Giao diện sáng / tối
+
+- **Chọn chế độ sáng / tối / theo hệ thống:** nút "Giao diện" trên thanh tiêu đề tab Tổng quan. Lựa chọn được lưu (`ThemeSettings.java`) và áp dụng ngay.
+- **Bảng màu riêng cho app:** màu Material 3 tông xanh `#1E5AA8` cho cả hai chế độ (`values/colors.xml`, `values-night/colors.xml`). Bỏ màu động theo hình nền (Android 12+) để app luôn cùng một tông màu.
+- **Thẻ nhẹ hơn:** nền thẻ sáng hơn, bo góc 16dp. Thẻ GPA hệ 4 ở Tổng quan được tô màu nhấn.
+- **Đổi tên tab "Cứu môn" thành "Điểm cần đạt"** cho đúng chức năng: tính điểm tối thiểu cần ở các thành phần còn lại của môn đang học.
+
 ### Test
 
 - Thêm `DataFileTest`, `CourseTest`, `GeminiServiceTest` và một test `progressPercent` trong `GpaCalculatorTest`.
