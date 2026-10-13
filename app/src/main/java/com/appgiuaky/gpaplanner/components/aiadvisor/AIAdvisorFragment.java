@@ -53,6 +53,9 @@ public class AIAdvisorFragment extends TabFragment {
     private int shownMessages;
     /** The "Đang trả lời..." row at the end of chatList, or null. */
     private View typingRow;
+    /** Bong bóng câu trả lời đang về (streaming) ở cuối chatList, hoặc null. */
+    private View streamingRow;
+    private TextView streamingText;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle state) {
@@ -69,6 +72,8 @@ public class AIAdvisorFragment extends TabFragment {
         hours = view.findViewById(R.id.hours);
         shownMessages = 0;
         typingRow = null;
+        streamingRow = null;
+        streamingText = null;
 
         MaterialToolbar toolbar = view.findViewById(R.id.toolbar);
         toolbar.inflateMenu(R.menu.menu_advisor);
@@ -84,6 +89,7 @@ public class AIAdvisorFragment extends TabFragment {
             public void onTabSelected(TabLayout.Tab tab) {
                 section = tab.getPosition();
                 updatePanels();
+                Ui.fadeIn(view.findViewById(section == 0 ? R.id.chat_panel : R.id.plan_panel));
             }
 
             @Override
@@ -99,6 +105,7 @@ public class AIAdvisorFragment extends TabFragment {
         view.findViewById(R.id.send).setOnClickListener(v -> send());
         chatInput.addTextChangedListener(new Ui.SimpleWatcher(this::updateSendButton));
         vm.getChat().observe(getViewLifecycleOwner(), messages -> renderChat());
+        vm.getChatPartial().observe(getViewLifecycleOwner(), this::renderPartial);
         vm.getChatLoading().observe(getViewLifecycleOwner(), loading -> {
             renderChat();
             updateSendButton();
@@ -172,15 +179,54 @@ public class AIAdvisorFragment extends TabFragment {
             chatList.removeAllViews();
             shownMessages = 0;
             typingRow = null;
+            streamingRow = null;
+            streamingText = null;
         }
         if (typingRow != null) {
             chatList.removeView(typingRow);
             typingRow = null;
         }
-        for (int i = shownMessages; i < messages.size(); i++) Ui.add(chatList, bubble(messages.get(i)), 8);
+        // Câu trả lời hoàn chỉnh thay cho bong bóng đang về, nên không cần hiện mờ dần lần nữa
+        boolean replacesStreaming = streamingRow != null && messages.size() > shownMessages;
+        if (replacesStreaming) removeStreamingRow();
+        for (int i = shownMessages; i < messages.size(); i++) {
+            View bubble = Ui.add(chatList, bubble(messages.get(i)), 8);
+            if (!replacesStreaming) Ui.fadeIn(bubble);
+        }
         shownMessages = messages.size();
-        if (chatLoading()) typingRow = Ui.add(chatList, typingRow(), 8);
-        // Cuộn xuống tin nhắn mới nhất
+        if (chatLoading() && streamingRow == null) typingRow = Ui.add(chatList, typingRow(), 8);
+        scrollToBottom();
+    }
+
+    /** Câu trả lời đang về: thay dòng "Đang trả lời..." bằng bong bóng và cập nhật chữ mỗi khi có thêm. */
+    private void renderPartial(String text) {
+        if (text == null) {
+            // Xong hoặc lỗi: renderChat đã hiện câu trả lời hoàn chỉnh hoặc dựng lại danh sách
+            if (streamingRow != null) removeStreamingRow();
+            return;
+        }
+        if (typingRow != null) {
+            chatList.removeView(typingRow);
+            typingRow = null;
+        }
+        if (streamingRow == null) {
+            streamingRow = Ui.add(chatList, bubble(new ChatMessage(false, text)), 8);
+            streamingText = (TextView) ((ViewGroup) streamingRow).getChildAt(0);
+            Ui.fadeIn(streamingRow);
+        } else {
+            streamingText.setText(text);
+        }
+        scrollToBottom();
+    }
+
+    private void removeStreamingRow() {
+        chatList.removeView(streamingRow);
+        streamingRow = null;
+        streamingText = null;
+    }
+
+    /** Cuộn xuống tin nhắn mới nhất. */
+    private void scrollToBottom() {
         chatScroll.post(() -> chatScroll.smoothScrollTo(0, chatList.getHeight()));
     }
 
@@ -188,6 +234,8 @@ public class AIAdvisorFragment extends TabFragment {
         chatList.removeAllViews();
         shownMessages = 0;
         typingRow = null;
+        streamingRow = null;
+        streamingText = null;
         Ui.add(chatList, Ui.text(requireContext(), getString(R.string.chat_intro),
                 com.google.android.material.R.attr.textAppearanceBodyMedium,
                 com.google.android.material.R.attr.colorOnSurfaceVariant), 0);

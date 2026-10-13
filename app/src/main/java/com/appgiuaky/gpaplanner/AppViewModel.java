@@ -3,6 +3,8 @@ package com.appgiuaky.gpaplanner;
 import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Handler;
+import android.os.Looper;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
@@ -22,6 +24,9 @@ import org.json.JSONException;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.ConnectException;
+import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -29,8 +34,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 /**
  * Giữ dữ liệu bảng điểm (lưu file JSON trong máy), API key và trạng thái các tác vụ AI.
@@ -41,13 +49,24 @@ public class AppViewModel extends AndroidViewModel {
     private static final String KEY_API = "gemini_api_key";
     /** Keeps each advisor request small; older turns matter little once the transcript is resent. */
     private static final int MAX_HISTORY_MESSAGES = 20;
+    private static final long FIRST_TEXT_TIMEOUT_MS = GeminiService.FIRST_TEXT_TIMEOUT_MS;
+    private static final String NO_RESPONSE_MESSAGE = "Gemini chưa phản hồi sau " + FIRST_TEXT_TIMEOUT_MS / 1000
+            + " giây. Có thể máy chủ đang quá tải hoặc mạng yếu, thử lại sau ít phút.";
+    private static final String NETWORK_MESSAGE = "Không kết nối được tới Gemini. Kiểm tra kết nối mạng rồi thử lại.";
 
     private final DataFile file;
     private final SharedPreferences prefs;
     /** Separate from the network thread so a slow Gemini call never delays saving. */
     private final ExecutorService ioExecutor = Executors.newSingleThreadExecutor();
-    /** Luồng nền cho các lệnh gọi mạng tới Gemini. */
-    private final ExecutorService networkExecutor = Executors.newSingleThreadExecutor();
+    /**
+     * Luồng nền cho các lệnh gọi mạng tới Gemini. Mỗi lần gọi một luồng riêng: lần gọi bị treo vì mạng hỏng
+     * không làm lần gửi sau phải xếp hàng chờ nó.
+     */
+    private final ExecutorService networkExecutor = Executors.newCachedThreadPool();
+    private final Handler main = new Handler(Looper.getMainLooper());
+    /** Số thứ tự lần gọi Gemini đang chờ của hỏi đáp / lịch ôn thi (xem callGemini). */
+    private final AtomicInteger chatCall = new AtomicInteger();
+    private final AtomicInteger planCall = new AtomicInteger();
 
     private final MutableLiveData<AcademicData> data = new MutableLiveData<>();
     /** Storage problem to show the user once; cleared after it is shown. */
@@ -58,6 +77,8 @@ public class AppViewModel extends AndroidViewModel {
     private final MutableLiveData<List<ChatMessage>> chat = new MutableLiveData<>(Collections.<ChatMessage>emptyList());
     private final MutableLiveData<Boolean> chatLoading = new MutableLiveData<>(false);
     private final MutableLiveData<String> chatError = new MutableLiveData<>();
+    /** Phần câu trả lời đang về (streaming); null khi không có câu trả lời nào đang viết dở. */
+    private final MutableLiveData<String> chatPartial = new MutableLiveData<>();
     /** Câu hỏi gửi lỗi, được trả lại ô nhập để người dùng gửi lại. */
     private volatile String failedInput;
 
@@ -234,6 +255,10 @@ public class AppViewModel extends AndroidViewModel {
         return chatError;
     }
 
+    public LiveData<String> getChatPartial() {
+        return chatPartial;
+    }
+
     /** Lấy (một lần) câu hỏi vừa gửi lỗi để đưa lại vào ô nhập. */
     public String takeFailedInput() {
         String s = failedInput;
@@ -249,28 +274,69 @@ public class AppViewModel extends AndroidViewModel {
         chat.setValue(new ArrayList<>(chatMessages));
         chatLoading.setValue(true);
 
-        // Chuẩn bị dữ liệu trên luồng chính, chỉ gọi mạng ở luồng nền
+        callGemini(chatCall, GeminiService.advisorPrompt(current()),
+                GeminiService.recentHistory(chatMessages, MAX_HISTORY_MESSAGES),
+                chatPartial::setValue,
+                reply -> {
+                    chatMessages.add(new ChatMessage(false, reply));
+                    chat.setValue(new ArrayList<>(chatMessages));
+                    chatPartial.setValue(null);
+                    chatLoading.setValue(false);
+                },
+                error -> {
+                    chatMessages.remove(chatMessages.size() - 1);
+                    chat.setValue(new ArrayList<>(chatMessages));
+                    failedInput = text;
+                    chatError.setValue(error);
+                    chatPartial.setValue(null);
+                    chatLoading.setValue(false);
+                });
+    }
+
+    /**
+     * Gọi Gemini trên luồng nền; [onPartial], [onDone], [onError] luôn chạy trên luồng chính.
+     * Quá FIRST_TEXT_TIMEOUT_MS mà chưa có chữ nào thì báo lỗi, vì khi mạng hỏng, bước tìm địa chỉ máy chủ (DNS)
+     * có thể treo rất lâu mà thời gian chờ của HttpURLConnection không tính tới.
+     * Mỗi lần gọi có một số thứ tự trong [current]: lần gọi đã kết thúc hoặc hết giờ thì kết quả về muộn bị bỏ qua.
+     */
+    private void callGemini(AtomicInteger current, String systemPrompt, List<ChatMessage> history,
+                            Consumer<String> onPartial, Consumer<String> onDone, Consumer<String> onError) {
         final String key = apiKey.getValue();
-        final String prompt = GeminiService.advisorPrompt(current());
-        final List<ChatMessage> history = GeminiService.recentHistory(chatMessages, MAX_HISTORY_MESSAGES);
+        final int id = current.incrementAndGet();
+        final Runnable timeout = () -> finish(current, id, null, () -> onError.accept(NO_RESPONSE_MESSAGE));
+        main.postDelayed(timeout, FIRST_TEXT_TIMEOUT_MS);
         networkExecutor.execute(() -> {
             try {
-                String reply = GeminiService.generate(key, prompt, history);
-                synchronized (chatMessages) {
-                    chatMessages.add(new ChatMessage(false, reply));
-                    chat.postValue(new ArrayList<>(chatMessages));
-                }
+                String result = GeminiService.generate(key, systemPrompt, history, partial -> {
+                    // Lần gọi đã hết giờ: ngừng đọc tiếp thay vì tải nốt câu trả lời không còn ai chờ
+                    if (current.get() != id) throw new CancellationException();
+                    main.post(() -> {
+                        if (current.get() != id) return;
+                        main.removeCallbacks(timeout);
+                        onPartial.accept(partial);
+                    });
+                });
+                main.post(() -> finish(current, id, timeout, () -> onDone.accept(result)));
             } catch (Exception e) {
-                synchronized (chatMessages) {
-                    chatMessages.remove(chatMessages.size() - 1);
-                    chat.postValue(new ArrayList<>(chatMessages));
-                }
-                failedInput = text;
-                chatError.postValue(e.getMessage() != null ? e.getMessage() : "Không gọi được Gemini");
-            } finally {
-                chatLoading.postValue(false);
+                String message = errorMessage(e);
+                main.post(() -> finish(current, id, timeout, () -> onError.accept(message)));
             }
         });
+    }
+
+    /** Kết thúc lần gọi [id] nếu nó vẫn là lần gọi đang chờ (chạy trên luồng chính). */
+    private void finish(AtomicInteger current, int id, Runnable timeout, Runnable action) {
+        if (current.get() != id) return;
+        current.incrementAndGet();
+        if (timeout != null) main.removeCallbacks(timeout);
+        action.run();
+    }
+
+    private static String errorMessage(Exception e) {
+        if (e instanceof UnknownHostException || e instanceof ConnectException || e instanceof SocketTimeoutException) {
+            return NETWORK_MESSAGE;
+        }
+        return e.getMessage() != null ? e.getMessage() : "Không gọi được Gemini";
     }
 
     // ------------------------------------------------------------ Lịch ôn thi
@@ -298,23 +364,28 @@ public class AppViewModel extends AndroidViewModel {
 
     public void generateStudyPlan(List<GeminiService.Exam> exams, int hoursPerDay) {
         studyPlanError.setValue(null);
+        // Xóa lịch cũ: lịch mới hiện dần ngay khi Gemini viết tới đâu
+        studyPlan.setValue(null);
         studyPlanLoading.setValue(true);
-        final String key = apiKey.getValue();
-        final String request = GeminiService.studyPlanRequest(exams, hoursPerDay, todayUtcMillis());
-        networkExecutor.execute(() -> {
-            try {
-                studyPlan.postValue(GeminiService.generate(key, GeminiService.STUDY_PLANNER_PROMPT,
-                        Collections.singletonList(new ChatMessage(true, request))));
-            } catch (Exception e) {
-                studyPlanError.postValue(e.getMessage() != null ? e.getMessage() : "Không gọi được Gemini");
-            } finally {
-                studyPlanLoading.postValue(false);
-            }
-        });
+        String request = GeminiService.studyPlanRequest(exams, hoursPerDay, todayUtcMillis());
+        callGemini(planCall, GeminiService.STUDY_PLANNER_PROMPT,
+                Collections.singletonList(new ChatMessage(true, request)),
+                studyPlan::setValue,
+                plan -> {
+                    studyPlan.setValue(plan);
+                    studyPlanLoading.setValue(false);
+                },
+                error -> {
+                    // Không để lại nửa lịch trông như đã xong
+                    studyPlan.setValue(null);
+                    studyPlanError.setValue(error);
+                    studyPlanLoading.setValue(false);
+                });
     }
 
     @Override
     protected void onCleared() {
+        main.removeCallbacksAndMessages(null);
         networkExecutor.shutdownNow();
         // Let a pending write finish so the last edit is not lost
         ioExecutor.shutdown();

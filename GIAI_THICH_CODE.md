@@ -182,7 +182,7 @@ Mỗi dòng là một môn: `Học kỳ | Mã môn | Tên môn | Số TC | Tính
 
 ### Gemini API
 
-- Gọi REST `models/gemini-2.5-flash:generateContent`, key gửi qua header `x-goog-api-key`.
+- Gọi REST `models/gemini-3.8-flash:streamGenerateContent?alt=sse` (câu trả lời về dần), key gửi qua header `x-goog-api-key`. Model đang quá tải hoặc hết lượt (mã 429/500/503/504, hoặc 12 giây chưa có chữ) thì thử lần lượt `gemini-3.6-flash`, `gemini-3.5-flash-lite`.
 - Người dùng tự nhập key (nút 🔑 trên tab Cố vấn AI). Key chỉ lưu trong `SharedPreferences` trên máy, không có trong code.
 - Prompt yêu cầu trả lời tiếng Việt, văn bản thuần; app còn bỏ ký hiệu markdown (`**`, `#`) trước khi hiển thị.
 - Gửi lỗi (sai key, mất mạng...) thì app hiện thông báo lỗi và trả câu hỏi về ô nhập để gửi lại.

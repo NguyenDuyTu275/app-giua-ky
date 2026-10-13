@@ -1,6 +1,8 @@
 package com.appgiuaky.gpaplanner.services;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import com.appgiuaky.gpaplanner.services.GeminiService.ChatMessage;
@@ -37,5 +39,56 @@ public class GeminiServiceTest {
         // The cut at 20 lands on advisor message "5", which must be dropped
         List<ChatMessage> recent = GeminiService.recentHistory(conversation(25), 20);
         assertTrue(recent.get(0).fromUser);
+    }
+
+    @Test
+    public void sseDataReturnsPayloadOfDataLine() {
+        assertEquals("{\"candidates\":[]}", GeminiService.sseData("data: {\"candidates\":[]}"));
+    }
+
+    @Test
+    public void sseDataAcceptsLineWithoutSpaceAfterColon() {
+        assertEquals("{}", GeminiService.sseData("data:{}"));
+    }
+
+    @Test
+    public void sseDataIgnoresBlankAndNonDataLines() {
+        // Events are separated by blank lines; other SSE fields carry no answer text
+        assertNull(GeminiService.sseData(""));
+        assertNull(GeminiService.sseData("data:   "));
+        assertNull(GeminiService.sseData("event: message"));
+        assertNull(GeminiService.sseData(": keep-alive"));
+    }
+
+    @Test
+    public void busyOrOutOfQuotaTriesNextModel() {
+        assertTrue(GeminiService.shouldTryNextModel(429));
+        assertTrue(GeminiService.shouldTryNextModel(500));
+        assertTrue(GeminiService.shouldTryNextModel(503));
+        assertTrue(GeminiService.shouldTryNextModel(504));
+    }
+
+    @Test
+    public void requestErrorsDoNotTryNextModel() {
+        // A bad key or a bad request fails the same way on every model
+        assertFalse(GeminiService.shouldTryNextModel(400));
+        assertFalse(GeminiService.shouldTryNextModel(401));
+        assertFalse(GeminiService.shouldTryNextModel(403));
+        assertFalse(GeminiService.shouldTryNextModel(404));
+    }
+
+    @Test
+    public void cleanRemovesBoldMarkersAndHeadings() {
+        assertEquals("Kết luận\n- Cần đạt B+", GeminiService.clean("## Kết luận\n- Cần đạt **B+**"));
+    }
+
+    @Test
+    public void cleanKeepsHashInsideText() {
+        assertEquals("Môn C# đạt A", GeminiService.clean("Môn C# đạt A"));
+    }
+
+    @Test
+    public void cleanTrimsSurroundingWhitespace() {
+        assertEquals("Xin chào", GeminiService.clean("\n  Xin chào  \n"));
     }
 }

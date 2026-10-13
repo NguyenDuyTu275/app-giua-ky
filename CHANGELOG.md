@@ -25,6 +25,16 @@
 - **Xóa môn có nút Hoàn tác:** xóa môn là xóa ngay, kèm Snackbar có nút "Hoàn tác". Xóa môn **không còn hỏi xác nhận**; xóa học kỳ vẫn hỏi như cũ.
 - **Giảm vẽ lại thừa:** thêm `components/TabFragment.java`. Tab đang ẩn chỉ vẽ lại khi được mở. Chat chỉ thêm tin nhắn mới, không vẽ lại cả cuộc trò chuyện.
 
+### Cố vấn AI
+
+- **Đổi model sang `gemini-3.8-flash`:** Google không còn cấp `gemini-2.5-flash` cho người dùng mới, nên key tạo gần đây bị từ chối.
+- **Câu trả lời hiện dần (streaming)** thay vì chờ viết xong cả bài; lịch ôn thi cũng vậy. Mức suy nghĩ đặt `thinkingLevel: low` để bắt đầu trả lời sớm.
+- **Model dự phòng:** khi model chính quá tải hoặc hết lượt (429/500/503/504, hoặc 12 giây chưa có chữ), tự thử `gemini-3.6-flash` rồi `gemini-3.5-flash-lite`.
+- **Không còn treo "Đang trả lời…":** quá 40 giây chưa có chữ thì báo lỗi và trả câu hỏi về ô nhập. Trước đây, khi mạng hỏng, bước tìm địa chỉ máy chủ (DNS) có thể treo hàng phút mà không báo gì.
+- **Báo đúng lỗi:** đọc được câu báo lỗi của Google trong phản hồi dạng stream (trước đây đọc tới hết nên bị treo); lỗi mạng hiện bằng tiếng Việt.
+- Mỗi lần gọi chạy trên một luồng riêng, nên một lần gọi bị treo không làm lần gửi sau phải chờ.
+- Thêm 8 test cho phần đọc dữ liệu stream, bỏ markdown và chọn model dự phòng (tổng 27 test).
+
 ### Biểu đồ, thanh điều hướng và hiệu ứng
 
 - **Biểu đồ GPA theo học kỳ (`LineChartView`):**
