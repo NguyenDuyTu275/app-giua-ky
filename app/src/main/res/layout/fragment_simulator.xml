@@ -146,7 +146,7 @@
                     android:orientation="vertical" />
             </LinearLayout>
 
-            <!-- ============ Cứu môn ============ -->
+            <!-- ============ Điểm cần đạt ============ -->
             <LinearLayout
                 android:id="@+id/section_rescue"
                 android:layout_width="match_parent"

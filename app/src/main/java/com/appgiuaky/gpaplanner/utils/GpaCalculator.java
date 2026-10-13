@@ -189,7 +189,7 @@ public final class GpaCalculator {
         return summarize(entries);
     }
 
-    /** Một dòng của bảng "Cứu môn": điểm trung bình cần ở các thành phần còn lại để đạt [grade]. */
+    /** Một dòng của bảng "Điểm cần đạt":điểm trung bình cần ở các thành phần còn lại để đạt [grade]. */
     public static final class RescueRow {
         public final LetterGrade grade;
         /** 0.0 = chắc chắn đạt; null = không thể đạt kể cả được 10. */
@@ -201,7 +201,7 @@ public final class GpaCalculator {
         }
     }
 
-    /** "Cứu môn": với mỗi mức điểm đạt, điểm trung bình tối thiểu (bước 0.1) cần ở các thành phần chưa có điểm. */
+    /** "Điểm cần đạt": với mỗi mức điểm đạt, điểm trung bình tối thiểu (bước 0.1) cần ở các thành phần chưa có điểm. */
     public static List<RescueRow> rescue(Course course) {
         double known = 0;
         double remainingWeight = 0;

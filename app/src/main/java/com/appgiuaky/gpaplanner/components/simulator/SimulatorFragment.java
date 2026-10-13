@@ -43,7 +43,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-/** Chức năng 2 & 3: lập kế hoạch đạt GPA mục tiêu, máy tính "Cứu môn" và giả lập học cải thiện. */
+/** Chức năng 2 & 3: lập kế hoạch đạt GPA mục tiêu, máy tính "Điểm cần đạt" và giả lập học cải thiện. */
 public class SimulatorFragment extends TabFragment {
 
     private static final int GAP = 12;
@@ -223,7 +223,7 @@ public class SimulatorFragment extends TabFragment {
                 BODY_SMALL, ON_SURFACE_VARIANT), 8);
     }
 
-    // ---------------------------------------------------------------- Cứu môn
+    // ---------------------------------------------------------------- Điểm cần đạt
 
     private void renderRescue() {
         List<Course> pending = new ArrayList<>();

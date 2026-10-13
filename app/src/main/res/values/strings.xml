@@ -107,7 +107,7 @@
 
     <!-- Kế hoạch: Mục tiêu GPA -->
     <string name="tab_target">Mục tiêu GPA</string>
-    <string name="tab_rescue">Cứu môn</string>
+    <string name="tab_rescue">Điểm cần đạt</string>
     <string name="tab_improve">Học cải thiện</string>
     <string name="current">Hiện tại</string>
     <string name="target">Mục tiêu</string>
@@ -129,7 +129,7 @@
     <string name="plan_mix_low">%1$d TC còn lại đạt từ %2$s (≥ %3$s)</string>
     <string name="max_reachable">Nếu đạt A tất cả, GPA tích lũy tối đa là %1$s.</string>
 
-    <!-- Kế hoạch: Cứu môn -->
+    <!-- Kế hoạch: Điểm cần đạt (điểm tối thiểu ở các thành phần còn lại của môn đang học) -->
     <string name="rescue_empty">Không có môn nào đang học. Thêm môn chưa đủ điểm thành phần trong Bảng điểm để tính.</string>
     <string name="rescue_choose">Chọn môn đang học</string>
     <string name="rescue_not_yet">chưa có</string>

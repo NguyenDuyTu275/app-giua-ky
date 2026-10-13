@@ -30,7 +30,7 @@ app/src/main/java/com/appgiuaky/gpaplanner/
 │   ├── gradebook/             # Chức năng 1 & 6: bảng điểm CRUD, xuất/nhập Excel
 │   │   ├── GradebookFragment.java
 │   │   └── CourseDialog.java  # Hộp thoại thêm/sửa môn + điểm thành phần
-│   ├── simulator/             # Chức năng 2 & 3: mục tiêu GPA, "cứu môn", học cải thiện
+│   ├── simulator/             # Chức năng 2 & 3: mục tiêu GPA, "điểm cần đạt", học cải thiện
 │   │   └── SimulatorFragment.java
 │   ├── curriculum/            # Chức năng 5: cây chương trình đào tạo theo kỳ
 │   │   ├── CurriculumFragment.java
@@ -151,7 +151,7 @@ App đưa ra 2 phương án:
 
 Nếu kể cả đạt A hết mà vẫn không đủ, app báo "Không thể" kèm GPA tối đa có thể đạt.
 
-### 3.5 "Cứu môn" (`rescue`)
+### 3.5 "Điểm cần đạt" (`rescue`)
 
 Môn đang học còn thiếu điểm: với mỗi mức A…D, tìm điểm trung bình **nhỏ nhất** (bước 0.1, từ 0 đến 10) cần đạt ở các phần còn thiếu, sao cho điểm học phần (đã làm tròn) ≥ ngưỡng của mức đó.
 
@@ -168,7 +168,7 @@ Ví dụ: Chuyên cần 9 (10%), Giữa kỳ 8 (30%) → đã có 0.9 + 2.4 = 3.
 | # | Chức năng | File chính | Ghi chú |
 |---|---|---|---|
 | 1 | Bảng điểm (thêm/sửa/xóa) | `GradebookFragment`, `CourseDialog` | Hộp thoại kiểm tra: mã/tên không trống, 1–20 TC, tổng trọng số = 100%, điểm 0–10. Nút Lưu tự xử lý để **không đóng** hộp thoại khi còn lỗi. |
-| 2 | Kế hoạch GPA mục tiêu + cứu môn | `SimulatorFragment` (tab Mục tiêu GPA, Cứu môn) | Mục 3.4, 3.5 |
+| 2 | Kế hoạch GPA mục tiêu + điểm cần đạt | `SimulatorFragment` (tab Mục tiêu GPA, Điểm cần đạt) | Mục 3.4, 3.5 |
 | 3 | Giả lập học cải thiện | `SimulatorFragment` (tab Học cải thiện) | Mục 3.6 |
 | 4 | Tổng quan | `DashboardFragment`, `LineChartView`, `PieChartView` | Biểu đồ tự vẽ bằng `Canvas` trong `onDraw()`, không dùng thư viện biểu đồ |
 | 5 | Chương trình đào tạo | `CurriculumFragment`, `TreeLineView` | Trạng thái môn: Đã đạt / Nợ môn / Đã học lại / Đang học / Chưa học; thanh tiến độ 4 đoạn; sửa tổng tín chỉ chương trình |
