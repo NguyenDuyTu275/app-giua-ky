@@ -3,6 +3,8 @@ package com.appgiuaky.gpaplanner.components.curriculum;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.text.InputType;
+import android.transition.AutoTransition;
+import android.transition.TransitionManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -37,6 +39,7 @@ public class CurriculumFragment extends TabFragment {
 
     private static final int MIN_PROGRAM_CREDITS = 1;
     private static final int MAX_PROGRAM_CREDITS = 500;
+    private static final long EXPAND_MS = 220;
 
     /** Trạng thái của một môn trên cây chương trình. */
     private enum NodeState {
@@ -87,6 +90,13 @@ public class CurriculumFragment extends TabFragment {
         });
 
         observeWhenVisible(vm.getData(), this::render);
+    }
+
+    /** Mỗi lần quay lại tab thì thanh tiến độ chạy lại từ trái sang. */
+    @Override
+    public void onHiddenChanged(boolean hidden) {
+        super.onHiddenChanged(hidden);
+        if (!hidden && view != null) Ui.growIn(view.findViewById(R.id.progress_bar));
     }
 
     private NodeState stateOf(Course c) {
@@ -151,6 +161,7 @@ public class CurriculumFragment extends TabFragment {
             Ui.add(legend, Ui.legend(requireContext(), colors[i],
                     getString(R.string.legend_credits, getString(labels[i]), credits[i])), 4);
         }
+        Ui.growIn(bar);
 
         view.findViewById(R.id.empty).setVisibility(data.semesters.isEmpty() ? View.VISIBLE : View.GONE);
         LinearLayout semesters = view.findViewById(R.id.semesters);
@@ -189,6 +200,9 @@ public class CurriculumFragment extends TabFragment {
         applyExpanded.run();
         header.setOnClickListener(v -> {
             if (!collapsed.remove(semester.id)) collapsed.add(semester.id);
+            // Danh sách môn mở/đóng mượt và các học kỳ bên dưới trượt theo, thay vì nhảy ngay
+            TransitionManager.beginDelayedTransition(view.findViewById(R.id.semesters),
+                    new AutoTransition().setDuration(EXPAND_MS));
             applyExpanded.run();
         });
 

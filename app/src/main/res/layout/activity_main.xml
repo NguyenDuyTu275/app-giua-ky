@@ -1,11 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Layout chính: vùng chứa màn hình (Fragment) + thanh điều hướng dưới cùng -->
+<!-- Layout chính: dải nền sau thanh trạng thái + vùng chứa màn hình (Fragment) + thanh điều hướng dưới cùng -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
+
+    <!-- Cao bằng thanh trạng thái (đặt trong MainActivity), cùng nền đỏ với thanh tiêu đề bên dưới -->
+    <View
+        android:id="@+id/status_bar_background"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:background="@drawable/bg_header" />
 
     <FrameLayout
         android:id="@+id/container"

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Nền đỏ chuyển màu của thanh tiêu đề. Chuyển theo chiều ngang (góc 0) để dải sau thanh trạng thái
+    và thanh tiêu đề bên dưới khớp màu ở mọi vị trí theo chiều ngang.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <gradient
+        android:angle="0"
+        android:endColor="@color/header_end"
+        android:startColor="@color/header_start" />
+</shape>

@@ -41,7 +41,8 @@
     <string name="stat_credits_title">Tín chỉ tích lũy</string>
     <string name="stat_credits_note">%1$d%% chương trình</string>
     <string name="stat_passed_title">Môn đã qua</string>
-    <string name="stat_passed_note">%1$s • Đang học %2$d</string>
+    <!--  : khoảng trắng không ngắt dòng, để cụm "Đang học N" không bị tách khi xuống dòng -->
+    <string name="stat_passed_note">%1$s • Đang học %2$d</string>
     <string name="failed_count">Nợ %1$d môn</string>
     <string name="no_failed">Không nợ môn</string>
     <string name="no_score_yet">Chưa có điểm</string>
@@ -56,6 +57,9 @@
     <string name="chart_pie_description">Phân bố điểm chữ: %1$s</string>
     <string name="pie_legend_item">%1$s: %2$d môn (%3$d%%)</string>
     <string name="course_count">%1$d môn</string>
+    <string name="course_unit">môn</string>
+    <string name="chart_tooltip_semester">GPA kỳ: %1$s</string>
+    <string name="chart_tooltip_cumulative">Tích lũy: %1$s</string>
 
     <!-- Giao diện sáng / tối -->
     <string name="theme_title">Giao diện</string>
@@ -75,7 +79,9 @@
     <string name="delete_semester_title">Xóa %1$s?</string>
     <string name="delete_semester_message">Toàn bộ %1$d môn trong học kỳ này sẽ bị xóa.</string>
     <string name="semester_options">Tùy chọn học kỳ</string>
-    <string name="semester_summary">GPA kỳ: %1$s • Hệ 10: %2$s • %3$d TC</string>
+    <string name="semester_pill_gpa">GPA %1$s</string>
+    <string name="semester_pill_gpa10">Hệ 10: %1$s</string>
+    <string name="semester_credits">%1$d tín chỉ</string>
     <string name="semester_summary_no_score">%1$d TC • chưa có điểm tổng kết</string>
     <string name="no_courses">Chưa có môn học. Bấm + để thêm.</string>
     <string name="course_deleted">Đã xóa môn %1$s</string>

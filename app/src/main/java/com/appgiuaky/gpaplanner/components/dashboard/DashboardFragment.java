@@ -1,5 +1,6 @@
 package com.appgiuaky.gpaplanner.components.dashboard;
 
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -52,9 +53,10 @@ public class DashboardFragment extends TabFragment {
         });
         highlight(R.id.stat_gpa4);
 
+        LineChartView lineChart = view.findViewById(R.id.line_chart);
         LinearLayout legend = view.findViewById(R.id.line_legend);
-        legend.addView(Ui.legend(requireContext(), LineChartView.SEMESTER_COLOR, getString(R.string.semester_gpa)));
-        View cumulative = Ui.legend(requireContext(), LineChartView.CUMULATIVE_COLOR, getString(R.string.cumulative_gpa));
+        legend.addView(Ui.legend(requireContext(), lineChart.getSemesterColor(), getString(R.string.semester_gpa)));
+        View cumulative = Ui.legend(requireContext(), lineChart.getCumulativeColor(), getString(R.string.cumulative_gpa));
         cumulative.setPadding(Ui.dp(requireContext(), 16), 0, 0, 0);
         legend.addView(cumulative);
 
@@ -73,14 +75,15 @@ public class DashboardFragment extends TabFragment {
                 .show();
     }
 
-    /** GPA hệ 4 là con số quan trọng nhất nên thẻ của nó dùng màu nhấn của theme. */
+    /** GPA hệ 4 là con số quan trọng nhất nên thẻ của nó có nền đỏ chuyển màu, chữ trắng. */
     private void highlight(int statId) {
         MaterialCardView card = view.findViewById(statId);
-        int onContainer = Ui.color(requireContext(), com.google.android.material.R.attr.colorOnPrimaryContainer);
-        card.setCardBackgroundColor(Ui.color(requireContext(), com.google.android.material.R.attr.colorPrimaryContainer));
-        ((TextView) card.findViewById(R.id.stat_title)).setTextColor(onContainer);
-        ((TextView) card.findViewById(R.id.stat_value)).setTextColor(onContainer);
-        ((TextView) card.findViewById(R.id.stat_note)).setTextColor(onContainer);
+        card.setStrokeColor(Color.TRANSPARENT);
+        // MaterialCardView cắt nội dung theo góc bo, nên đặt nền chuyển màu cho khối nội dung bên trong
+        card.getChildAt(0).setBackgroundResource(R.drawable.bg_hero);
+        ((TextView) card.findViewById(R.id.stat_title)).setTextColor(Color.WHITE);
+        ((TextView) card.findViewById(R.id.stat_value)).setTextColor(Color.WHITE);
+        ((TextView) card.findViewById(R.id.stat_note)).setTextColor(Color.WHITE);
     }
 
     private void render(AcademicData data) {
@@ -149,7 +152,7 @@ public class DashboardFragment extends TabFragment {
         view.findViewById(R.id.pie_empty).setVisibility(sum == 0 ? View.VISIBLE : View.GONE);
         view.findViewById(R.id.pie_row).setVisibility(sum == 0 ? View.GONE : View.VISIBLE);
         PieChartView pieChart = view.findViewById(R.id.pie_chart);
-        pieChart.setData(letters, countArray, getString(R.string.course_count, sum));
+        pieChart.setData(letters, countArray, String.valueOf(sum), getString(R.string.course_unit));
         LinearLayout pieLegend = view.findViewById(R.id.pie_legend);
         pieLegend.removeAllViews();
         List<String> slices = new ArrayList<>();
@@ -171,7 +174,16 @@ public class DashboardFragment extends TabFragment {
         ((TextView) card.findViewById(R.id.stat_note)).setText(note);
         LinearProgressIndicator bar = card.findViewById(R.id.stat_progress);
         bar.setVisibility(progress >= 0 ? View.VISIBLE : View.GONE);
-        if (progress >= 0) bar.setProgress(progress);
+        if (progress >= 0) bar.setProgressCompat(progress, true);
+    }
+
+    /** Mỗi lần quay lại tab Tổng quan thì biểu đồ chạy lại hiệu ứng vẽ. */
+    @Override
+    public void onHiddenChanged(boolean hidden) {
+        super.onHiddenChanged(hidden);
+        if (hidden || view == null) return;
+        ((LineChartView) view.findViewById(R.id.line_chart)).animateIn();
+        ((PieChartView) view.findViewById(R.id.pie_chart)).animateIn();
     }
 
     private static double[] toArray(List<Double> list) {

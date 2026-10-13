@@ -25,6 +25,34 @@
 - **Xóa môn có nút Hoàn tác:** xóa môn là xóa ngay, kèm Snackbar có nút "Hoàn tác". Xóa môn **không còn hỏi xác nhận**; xóa học kỳ vẫn hỏi như cũ.
 - **Giảm vẽ lại thừa:** thêm `components/TabFragment.java`. Tab đang ẩn chỉ vẽ lại khi được mở. Chat chỉ thêm tin nhắn mới, không vẽ lại cả cuộc trò chuyện.
 
+### Biểu đồ, thanh điều hướng và hiệu ứng
+
+- **Biểu đồ GPA theo học kỳ (`LineChartView`):**
+  - Đường GPA kỳ màu đỏ, cong mượt, có vùng tô nhạt dần bên dưới. Đường GPA tích lũy màu xanh, nét đứt nên vẫn phân biệt được khi không nhìn rõ màu.
+  - Chấm dạng vòng, số GPA hiện ngay cạnh mỗi điểm.
+  - Đường vẽ dần từ trái sang.
+  - Chạm vào một kỳ để xem ô số liệu, chạm lại để ẩn. Với TalkBack, mỗi lần chạm đúp chuyển sang kỳ tiếp theo.
+- **Biểu đồ điểm chữ (`PieChartView`):** các phần cách nhau một khe nhỏ, vành quay dần khi mở, số môn hiện to ở giữa. Chạm vào một phần thì phần đó dày lên và giữa vành hiện điểm chữ cùng số môn.
+- Hai biểu đồ chạy lại hiệu ứng mỗi lần quay lại tab Tổng quan. Thanh tiến độ tín chỉ (Tổng quan, Chương trình) chạy dần từ trái sang.
+- **Thanh điều hướng dưới:**
+  - Bo tròn hai góc trên.
+  - Mục đang chọn là viên đỏ với icon trắng, nhãn đỏ đậm.
+  - Icon nảy nhẹ khi bấm.
+- **Chuyển tab:** màn hình mới trượt nhẹ vào từ phía của tab được chọn (`res/anim/tab_*.xml`). Đổi mục con ở Kế hoạch và Cố vấn AI, cùng tin nhắn chat mới, hiện mờ dần (`Ui.fadeIn()`).
+- **Hiệu ứng ấn:** nút, chip và dòng môn học thu nhỏ nhẹ khi ấn (`res/animator/press_scale*.xml`). Học kỳ trên cây chương trình mở/đóng mượt.
+- Hiệu ứng biểu đồ, mờ dần và ấn nút dùng Animator nên tự tắt khi máy đặt "Thang thời lượng animator" về 0 (ví dụ bật "Xóa hiệu ứng động"). Chưa kiểm tra hiệu ứng chuyển tab trong trường hợp này.
+
+### Giao diện theo phong cách gradeptit.web.app
+
+- **Màu đỏ PTIT `#BB2019`** thay cho tông xanh, có cả bản sáng và tối (`values/colors.xml`, `values-night/colors.xml`). Chữ và viền dùng tông xám xanh như trang web. Trang web không có chế độ tối nên bản tối là tự dựng, cùng tông đỏ.
+- **Thanh tiêu đề đỏ chuyển màu, chữ trắng**, nối liền với dải sau thanh trạng thái (`bg_header.xml`, `status_bar_background` trong `activity_main.xml`). Icon thanh trạng thái luôn trắng.
+- **Thẻ trắng viền mảnh, bóng nhẹ, bo góc 16dp.** Thẻ học kỳ ở Bảng điểm có viền hồng `#FF9999`. Thẻ GPA hệ 4 ở Tổng quan có nền đỏ chuyển màu.
+- **GPA học kỳ hiện dạng viên:** viên đỏ "GPA 3.27" và viên viền đỏ "Hệ 10: 7.77" (`Ui.tag()`).
+- **Tab Điểm cần đạt:** ô "Cần ≥ …" nền hồng viền đỏ, chuyển sang xanh khi chắc chắn đạt, giống ô điểm mục tiêu trên web.
+- **Chip, ô nhập, thanh điều hướng dưới:** chip chọn thì nền đỏ chữ trắng; ô nhập nền hồng nhạt; mục đang chọn ở thanh dưới màu đỏ.
+- **Font Be Vietnam Pro** (giấy phép SIL OFL, file giấy phép ở `licenses/BeVietnamPro-OFL.txt`). Trang web dùng Outfit nhưng Outfit thiếu 96/134 chữ tiếng Việt có dấu, nên chọn font cùng kiểu dáng có đủ dấu. APK nặng thêm khoảng 410KB.
+- Giữ nguyên tên app, icon app, màu điểm chữ (A, B+, B…) và màu hai đường biểu đồ.
+
 ### Giao diện sáng / tối
 
 - **Chọn chế độ sáng / tối / theo hệ thống:** nút "Giao diện" trên thanh tiêu đề tab Tổng quan. Lựa chọn được lưu (`ThemeSettings.java`) và áp dụng ngay.

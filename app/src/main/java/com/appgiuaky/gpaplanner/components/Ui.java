@@ -12,6 +12,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -32,6 +33,10 @@ import java.util.function.Predicate;
 
 /** Các hàm dựng giao diện dùng chung cho mọi màn hình. */
 public final class Ui {
+
+    private static final int FADE_IN_OFFSET_DP = 12;
+    private static final long FADE_IN_MS = 220;
+    private static final long GROW_IN_MS = 700;
 
     private Ui() {
     }
@@ -78,6 +83,23 @@ public final class Ui {
         GradientDrawable bg = new GradientDrawable();
         bg.setColor(gradeColor(letter));
         bg.setCornerRadius(dp(c, 6));
+        tv.setBackground(bg);
+        return tv;
+    }
+
+    /**
+     * Nhãn bo góc có nền và viền, ví dụ viên "GPA 3.20" hay ô "Cần ≥ 8.6".
+     * Màu truyền vào là màu thật (đã lấy từ theme), để nhãn tự đổi theo chế độ sáng/tối.
+     */
+    public static TextView tag(Context c, CharSequence s, int background, int stroke, int textColor, int radiusDp) {
+        TextView tv = text(c, s, com.google.android.material.R.attr.textAppearanceLabelLarge);
+        tv.setTextColor(textColor);
+        tv.setGravity(Gravity.CENTER);
+        tv.setPadding(dp(c, 10), dp(c, 4), dp(c, 10), dp(c, 4));
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(background);
+        bg.setStroke(dp(c, 1), stroke);
+        bg.setCornerRadius(dp(c, radiusDp));
         tv.setBackground(bg);
         return tv;
     }
@@ -187,6 +209,21 @@ public final class Ui {
                 .setPositiveButton(R.string.ok, (d, w) -> onConfirm.run())
                 .setNegativeButton(R.string.cancel, null)
                 .show();
+    }
+
+    /** Hiện dần và trượt nhẹ lên, dùng khi một khối nội dung vừa xuất hiện (đổi mục con, tin nhắn mới). */
+    public static void fadeIn(View v) {
+        v.setAlpha(0f);
+        v.setTranslationY(dp(v.getContext(), FADE_IN_OFFSET_DP));
+        v.animate().alpha(1f).translationY(0f).setDuration(FADE_IN_MS)
+                .setInterpolator(new DecelerateInterpolator()).start();
+    }
+
+    /** Dài dần từ trái sang, dùng cho thanh tiến độ. */
+    public static void growIn(View v) {
+        v.setPivotX(0f);
+        v.setScaleX(0f);
+        v.animate().scaleX(1f).setDuration(GROW_IN_MS).setInterpolator(new DecelerateInterpolator()).start();
     }
 
     /** TextWatcher chỉ cần biết "nội dung vừa đổi". */

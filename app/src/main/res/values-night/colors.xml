@@ -1,36 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Bảng màu Material 3 (chế độ tối): màu chính sáng hơn để đủ tương phản trên nền tối -->
-    <color name="md_primary">#ACC7FF</color>
-    <color name="md_on_primary">#002F67</color>
-    <color name="md_primary_container">#0E4590</color>
-    <color name="md_on_primary_container">#D7E2FF</color>
-    <color name="md_inverse_primary">#2B5BA8</color>
-    <color name="md_secondary">#BEC6DC</color>
-    <color name="md_on_secondary">#283141</color>
-    <color name="md_secondary_container">#3E4759</color>
-    <color name="md_on_secondary_container">#DAE2F9</color>
-    <color name="md_tertiary">#82D5C6</color>
-    <color name="md_on_tertiary">#003731</color>
-    <color name="md_tertiary_container">#005048</color>
-    <color name="md_on_tertiary_container">#9EF2E2</color>
+    <!-- Bảng màu Material 3 (chế độ tối): web gốc không có bản tối nên dựng cùng tông đỏ, sáng hơn để đủ tương phản -->
+    <color name="md_primary">#FFB4A9</color>
+    <color name="md_on_primary">#690002</color>
+    <color name="md_primary_container">#8B1A10</color>
+    <color name="md_on_primary_container">#FFDAD5</color>
+    <color name="md_inverse_primary">#BB2019</color>
+    <color name="md_secondary">#E7BDB6</color>
+    <color name="md_on_secondary">#442925</color>
+    <color name="md_secondary_container">#4A2522</color>
+    <color name="md_on_secondary_container">#FFDAD5</color>
+    <color name="md_tertiary">#A3C9FF</color>
+    <color name="md_on_tertiary">#00315B</color>
+    <color name="md_tertiary_container">#1A4975</color>
+    <color name="md_on_tertiary_container">#D3E4FF</color>
     <color name="md_error">#FFB4AB</color>
     <color name="md_on_error">#690005</color>
     <color name="md_error_container">#93000A</color>
     <color name="md_on_error_container">#FFDAD6</color>
-    <color name="md_background">#111318</color>
-    <color name="md_on_background">#E2E2E9</color>
-    <color name="md_surface">#111318</color>
-    <color name="md_on_surface">#E2E2E9</color>
-    <color name="md_surface_variant">#44474F</color>
-    <color name="md_on_surface_variant">#C4C6D0</color>
-    <color name="md_outline">#8E9099</color>
-    <color name="md_outline_variant">#44474F</color>
-    <color name="md_inverse_surface">#E2E2E9</color>
-    <color name="md_inverse_on_surface">#2E3036</color>
-    <color name="md_surface_container_lowest">#0C0E13</color>
-    <color name="md_surface_container_low">#191C20</color>
-    <color name="md_surface_container">#1D2024</color>
-    <color name="md_surface_container_high">#282A2F</color>
-    <color name="md_surface_container_highest">#33353A</color>
+    <color name="md_background">#161213</color>
+    <color name="md_on_background">#F1DEDC</color>
+    <color name="md_surface">#161213</color>
+    <color name="md_on_surface">#F1DEDC</color>
+    <color name="md_surface_variant">#534341</color>
+    <color name="md_on_surface_variant">#D8C2BF</color>
+    <color name="md_outline">#A08C8A</color>
+    <color name="md_outline_variant">#3D3433</color>
+    <color name="md_inverse_surface">#F1DEDC</color>
+    <color name="md_inverse_on_surface">#362F2E</color>
+    <color name="md_surface_container_lowest">#110D0C</color>
+    <color name="md_surface_container_low">#1F1A19</color>
+    <color name="md_surface_container">#231E1D</color>
+    <color name="md_surface_container_high">#2E2827</color>
+    <color name="md_surface_container_highest">#393332</color>
+
+    <color name="header_start">#8B1A10</color>
+    <color name="header_end">#BB2019</color>
+    <color name="hero_start">#A51C15</color>
+    <color name="hero_end">#6B140C</color>
+    <!-- Thẻ sáng hơn nền một bậc thì mới tách khỏi nền tối -->
+    <color name="card_background">#231E1D</color>
+    <color name="semester_stroke">#5C2B27</color>
+    <color name="input_background">#2A1F1E</color>
+    <color name="target_background">#3A1F1C</color>
+    <color name="passed_background">#1A2B3D</color>
 </resources>

@@ -1,5 +1,6 @@
 package com.appgiuaky.gpaplanner.components.gradebook;
 
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.InputType;
@@ -41,6 +42,8 @@ public class GradebookFragment extends TabFragment {
 
     private static final int MENU_RENAME = 1;
     private static final int MENU_DELETE = 2;
+    /** Đủ lớn để hai đầu viên GPA tròn hẳn. */
+    private static final int PILL_RADIUS_DP = 100;
 
     private AppViewModel vm;
     private LinearLayout semestersView;
@@ -147,9 +150,24 @@ public class GradebookFragment extends TabFragment {
         int credits = 0;
         for (Course c : semester.courses) credits += c.credits;
         ((TextView) card.findViewById(R.id.semester_name)).setText(semester.name);
-        ((TextView) card.findViewById(R.id.semester_summary)).setText(summary.credits > 0
-                ? getString(R.string.semester_summary, Format.fmt(summary.gpa4), Format.fmt(summary.gpa10), credits)
+        boolean hasScore = summary.credits > 0;
+        ((TextView) card.findViewById(R.id.semester_summary)).setText(hasScore
+                ? getString(R.string.semester_credits, credits)
                 : getString(R.string.semester_summary_no_score, credits));
+        LinearLayout pills = card.findViewById(R.id.semester_pills);
+        pills.setVisibility(hasScore ? View.VISIBLE : View.GONE);
+        if (hasScore) {
+            int primary = Ui.color(requireContext(), androidx.appcompat.R.attr.colorPrimary);
+            int onPrimary = Ui.color(requireContext(), com.google.android.material.R.attr.colorOnPrimary);
+            pills.addView(Ui.tag(requireContext(), getString(R.string.semester_pill_gpa, Format.fmt(summary.gpa4)),
+                    primary, primary, onPrimary, PILL_RADIUS_DP));
+            TextView gpa10 = Ui.tag(requireContext(), getString(R.string.semester_pill_gpa10, Format.fmt(summary.gpa10)),
+                    Color.TRANSPARENT, primary, primary, PILL_RADIUS_DP);
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            lp.setMarginStart(Ui.dp(requireContext(), 6));
+            pills.addView(gpa10, lp);
+        }
 
         card.findViewById(R.id.add_course).setOnClickListener(v -> CourseDialog.show(
                 requireContext(), null, course -> vm.saveCourse(semester.id, course), null));

@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Một học kỳ trong Bảng điểm: tiêu đề + nút thêm môn + menu, bên dưới là danh sách môn -->
+<!-- Một học kỳ trong Bảng điểm: tiêu đề + GPA dạng viên đỏ + nút thêm môn + menu, bên dưới là danh sách môn -->
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    style="@style/Widget.GpaPlanner.Card.Semester"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
@@ -29,6 +30,16 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textAppearance="?attr/textAppearanceTitleMedium" />
+
+                <!-- Các viên GPA kỳ / hệ 10, được thêm bằng code (Ui.tag) -->
+                <LinearLayout
+                    android:id="@+id/semester_pills"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginVertical="4dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:visibility="gone" />
 
                 <TextView
                     android:id="@+id/semester_summary"

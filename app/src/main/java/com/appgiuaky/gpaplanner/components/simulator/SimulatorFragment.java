@@ -1,6 +1,7 @@
 package com.appgiuaky.gpaplanner.components.simulator;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -15,6 +16,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.core.widget.NestedScrollView;
 import androidx.lifecycle.ViewModelProvider;
 
@@ -54,6 +56,11 @@ public class SimulatorFragment extends TabFragment {
     private static final int ON_SURFACE_VARIANT = com.google.android.material.R.attr.colorOnSurfaceVariant;
     private static final int ERROR = androidx.appcompat.R.attr.colorError;
     private static final int PRIMARY = androidx.appcompat.R.attr.colorPrimary;
+    private static final int TERTIARY = com.google.android.material.R.attr.colorTertiary;
+    private static final int TAG_RADIUS_DP = 8;
+    private static final int TAG_MIN_WIDTH_DP = 104;
+    /** Các mục con theo thứ tự tab: Mục tiêu GPA, Điểm cần đạt, Học cải thiện. */
+    private static final int[] SECTIONS = {R.id.section_target, R.id.section_rescue, R.id.section_improve};
 
     /** Các mức xếp loại có thể chọn làm mục tiêu (Trung bình trở lên). */
     private static final List<Classification> TARGETS = new ArrayList<>();
@@ -117,13 +124,15 @@ public class SimulatorFragment extends TabFragment {
     }
 
     private void showSection(int index) {
-        if (index != vm.plannerSection) {
+        boolean changed = index != vm.plannerSection;
+        if (changed) {
             vm.plannerSection = index;
             ((NestedScrollView) view.findViewById(R.id.scroll)).scrollTo(0, 0);
         }
-        view.findViewById(R.id.section_target).setVisibility(index == 0 ? View.VISIBLE : View.GONE);
-        view.findViewById(R.id.section_rescue).setVisibility(index == 1 ? View.VISIBLE : View.GONE);
-        view.findViewById(R.id.section_improve).setVisibility(index == 2 ? View.VISIBLE : View.GONE);
+        for (int i = 0; i < SECTIONS.length; i++) {
+            view.findViewById(SECTIONS[i]).setVisibility(i == index ? View.VISIBLE : View.GONE);
+        }
+        if (changed) Ui.fadeIn(view.findViewById(SECTIONS[index]));
     }
 
     /**
@@ -267,21 +276,32 @@ public class SimulatorFragment extends TabFragment {
                 TITLE_SMALL), 0);
         for (GpaCalculator.RescueRow row : GpaCalculator.rescue(course)) {
             LinearLayout line = gradeLine(row.grade, getString(R.string.rescue_threshold, Format.plain(row.grade.minScore)));
-            String need;
-            int color;
-            if (row.need == null) {
-                need = getString(R.string.rescue_impossible);
-                color = ERROR;
-            } else if (row.need == 0.0) {
-                need = getString(R.string.rescue_safe);
-                color = PRIMARY;
-            } else {
-                need = getString(R.string.rescue_need, Format.fmt(row.need, 1));
-                color = com.google.android.material.R.attr.colorOnSurface;
-            }
-            line.addView(Ui.text(ctx(), need, TITLE_SMALL, color));
+            line.addView(needTag(row.need));
             Ui.add(table, line, 8);
         }
+    }
+
+    /** Ô điểm cần đạt, cùng bề rộng tối thiểu để các dòng thẳng cột. */
+    private TextView needTag(Double need) {
+        TextView tag = needTagOf(need);
+        tag.setMinWidth(Ui.dp(ctx(), TAG_MIN_WIDTH_DP));
+        return tag;
+    }
+
+    /** Hồng viền đỏ khi còn phải cố, xanh khi chắc chắn đạt, viền lỗi khi không thể. */
+    private TextView needTagOf(Double need) {
+        if (need == null) {
+            int error = Ui.color(ctx(), ERROR);
+            return Ui.tag(ctx(), getString(R.string.rescue_impossible), Color.TRANSPARENT, error, error, TAG_RADIUS_DP);
+        }
+        if (need == 0.0) {
+            int passed = Ui.color(ctx(), TERTIARY);
+            return Ui.tag(ctx(), getString(R.string.rescue_safe),
+                    ContextCompat.getColor(ctx(), R.color.passed_background), passed, passed, TAG_RADIUS_DP);
+        }
+        return Ui.tag(ctx(), getString(R.string.rescue_need, Format.fmt(need, 1)),
+                ContextCompat.getColor(ctx(), R.color.target_background), Ui.color(ctx(), PRIMARY),
+                Ui.color(ctx(), com.google.android.material.R.attr.colorOnSurface), TAG_RADIUS_DP);
     }
 
     // ---------------------------------------------------------------- Học cải thiện

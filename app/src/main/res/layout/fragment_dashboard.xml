@@ -96,7 +96,7 @@
                     <com.appgiuaky.gpaplanner.components.dashboard.LineChartView
                         android:id="@+id/line_chart"
                         android:layout_width="match_parent"
-                        android:layout_height="200dp" />
+                        android:layout_height="220dp" />
 
                     <LinearLayout
                         android:id="@+id/line_legend"
@@ -140,8 +140,8 @@
 
                         <com.appgiuaky.gpaplanner.components.dashboard.PieChartView
                             android:id="@+id/pie_chart"
-                            android:layout_width="140dp"
-                            android:layout_height="140dp" />
+                            android:layout_width="150dp"
+                            android:layout_height="150dp" />
 
                         <LinearLayout
                             android:id="@+id/pie_legend"

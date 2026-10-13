@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!--
-        Giao diện chung cho cả sáng và tối: màu lấy từ @color/md_*, bản tối nằm ở values-night/colors.xml.
-        Không dùng màu động theo hình nền để app luôn giữ tông xanh, hợp với màu điểm chữ và biểu đồ.
+        Giao diện chung cho cả sáng và tối, theo phong cách gradeptit.web.app: thanh tiêu đề đỏ chuyển màu,
+        thẻ trắng viền mảnh, chip và ô nhập bo tròn, font Be Vietnam Pro.
+        Màu lấy từ @color/md_*, bản tối nằm ở values-night/colors.xml.
     -->
     <style name="Base.Theme.GpaPlanner" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="colorPrimary">@color/md_primary</item>
@@ -38,14 +39,184 @@
         <item name="colorSurfaceContainerHigh">@color/md_surface_container_high</item>
         <item name="colorSurfaceContainerHighest">@color/md_surface_container_highest</item>
 
+        <!-- Font: các kiểu chữ Material 3 tự đặt font riêng nên phải thay từng kiểu một -->
+        <item name="android:fontFamily">@font/be_vietnam_pro</item>
+        <item name="fontFamily">@font/be_vietnam_pro</item>
+        <item name="textAppearanceDisplayLarge">@style/TextAppearance.GpaPlanner.DisplayLarge</item>
+        <item name="textAppearanceDisplayMedium">@style/TextAppearance.GpaPlanner.DisplayMedium</item>
+        <item name="textAppearanceDisplaySmall">@style/TextAppearance.GpaPlanner.DisplaySmall</item>
+        <item name="textAppearanceHeadlineLarge">@style/TextAppearance.GpaPlanner.HeadlineLarge</item>
+        <item name="textAppearanceHeadlineMedium">@style/TextAppearance.GpaPlanner.HeadlineMedium</item>
+        <item name="textAppearanceHeadlineSmall">@style/TextAppearance.GpaPlanner.HeadlineSmall</item>
+        <item name="textAppearanceTitleLarge">@style/TextAppearance.GpaPlanner.TitleLarge</item>
+        <item name="textAppearanceTitleMedium">@style/TextAppearance.GpaPlanner.TitleMedium</item>
+        <item name="textAppearanceTitleSmall">@style/TextAppearance.GpaPlanner.TitleSmall</item>
+        <item name="textAppearanceBodyLarge">@style/TextAppearance.GpaPlanner.BodyLarge</item>
+        <item name="textAppearanceBodyMedium">@style/TextAppearance.GpaPlanner.BodyMedium</item>
+        <item name="textAppearanceBodySmall">@style/TextAppearance.GpaPlanner.BodySmall</item>
+        <item name="textAppearanceLabelLarge">@style/TextAppearance.GpaPlanner.LabelLarge</item>
+        <item name="textAppearanceLabelMedium">@style/TextAppearance.GpaPlanner.LabelMedium</item>
+        <item name="textAppearanceLabelSmall">@style/TextAppearance.GpaPlanner.LabelSmall</item>
+
+        <item name="toolbarStyle">@style/Widget.GpaPlanner.Toolbar</item>
         <item name="materialCardViewStyle">@style/Widget.GpaPlanner.Card</item>
+        <item name="bottomNavigationStyle">@style/Widget.GpaPlanner.BottomNav</item>
+        <item name="textInputStyle">@style/Widget.GpaPlanner.TextInput</item>
+        <item name="materialButtonStyle">@style/Widget.GpaPlanner.Button</item>
+        <item name="materialButtonOutlinedStyle">@style/Widget.GpaPlanner.Button.Outlined</item>
     </style>
 
     <style name="Theme.GpaPlanner" parent="Base.Theme.GpaPlanner" />
 
-    <!-- Thẻ nền nhạt hơn mặc định và bo góc lớn hơn để các khối nội dung nhẹ nhàng, dễ tách nhau -->
-    <style name="Widget.GpaPlanner.Card" parent="Widget.Material3.CardView.Filled">
-        <item name="cardBackgroundColor">?attr/colorSurfaceContainer</item>
+    <!-- ===== Thanh tiêu đề: nền đỏ chuyển màu, chữ và icon trắng ===== -->
+    <style name="Widget.GpaPlanner.Toolbar" parent="Widget.Material3.Toolbar">
+        <item name="android:background">@drawable/bg_header</item>
+        <item name="titleTextColor">@android:color/white</item>
+        <item name="titleTextAppearance">@style/TextAppearance.GpaPlanner.ToolbarTitle</item>
+        <item name="materialThemeOverlay">@style/ThemeOverlay.GpaPlanner.Toolbar</item>
+    </style>
+
+    <!-- Icon trong menu dùng tint ?attr/colorControlNormal, nên chỉ cần đổi màu này trong thanh tiêu đề -->
+    <style name="ThemeOverlay.GpaPlanner.Toolbar" parent="">
+        <item name="colorControlNormal">@android:color/white</item>
+        <item name="actionMenuTextColor">@android:color/white</item>
+    </style>
+
+    <style name="TextAppearance.GpaPlanner.ToolbarTitle" parent="TextAppearance.GpaPlanner.TitleLarge">
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <!-- ===== Thẻ: nền trắng, viền mảnh, bóng nhẹ, bo góc 16dp ===== -->
+    <style name="Widget.GpaPlanner.Card" parent="Widget.Material3.CardView.Elevated">
+        <item name="cardBackgroundColor">@color/card_background</item>
+        <item name="cardElevation">2dp</item>
         <item name="cardCornerRadius">16dp</item>
+        <item name="strokeColor">?attr/colorOutlineVariant</item>
+        <item name="strokeWidth">1dp</item>
+    </style>
+
+    <!-- Thẻ học kỳ có viền hồng như trang web -->
+    <style name="Widget.GpaPlanner.Card.Semester">
+        <item name="strokeColor">@color/semester_stroke</item>
+    </style>
+
+    <!-- ===== Chip: trắng viền xám, khi chọn thì nền đỏ chữ trắng ===== -->
+    <style name="Widget.GpaPlanner.Chip" parent="Widget.Material3.Chip.Filter">
+        <item name="chipBackgroundColor">@color/chip_background</item>
+        <item name="android:textColor">@color/chip_text</item>
+        <item name="checkedIconTint">@color/chip_text</item>
+        <item name="chipStrokeColor">@color/chip_stroke</item>
+        <item name="chipStrokeWidth">1.5dp</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.Material3.Corner.Full</item>
+        <item name="android:stateListAnimator">@animator/press_scale</item>
+    </style>
+
+    <!-- ===== Ô nhập: nền hồng nhạt, bo góc 12dp ===== -->
+    <style name="Widget.GpaPlanner.TextInput" parent="Widget.Material3.TextInputLayout.OutlinedBox">
+        <item name="boxBackgroundColor">@color/input_background</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.GpaPlanner.Input</item>
+    </style>
+
+    <style name="Widget.GpaPlanner.TextInput.Dense" parent="Widget.Material3.TextInputLayout.OutlinedBox.Dense">
+        <item name="boxBackgroundColor">@color/input_background</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.GpaPlanner.Input</item>
+    </style>
+
+    <style name="ShapeAppearance.GpaPlanner.Input" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">12dp</item>
+    </style>
+
+    <!--
+        ===== Thanh điều hướng dưới: nền trắng có bóng, bo góc trên (đặt trong MainActivity),
+        mục đang chọn là viên đỏ với icon trắng và nhãn đỏ đậm =====
+    -->
+    <style name="Widget.GpaPlanner.BottomNav" parent="Widget.Material3.BottomNavigationView">
+        <item name="backgroundTint">@color/card_background</item>
+        <item name="elevation">12dp</item>
+        <item name="itemIconTint">@color/bottom_nav_icon</item>
+        <item name="itemTextColor">@color/bottom_nav_item</item>
+        <item name="itemActiveIndicatorStyle">@style/Widget.GpaPlanner.BottomNav.ActiveIndicator</item>
+        <item name="itemTextAppearanceActive">@style/TextAppearance.GpaPlanner.NavLabelActive</item>
+        <item name="itemTextAppearanceInactive">@style/TextAppearance.GpaPlanner.LabelMedium</item>
+    </style>
+
+    <style name="Widget.GpaPlanner.BottomNav.ActiveIndicator" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
+        <item name="android:color">?attr/colorPrimary</item>
+    </style>
+
+    <style name="TextAppearance.GpaPlanner.NavLabelActive" parent="TextAppearance.GpaPlanner.LabelMedium">
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <!-- ===== Nút: thu nhỏ nhẹ khi ấn (animator/press_scale) ===== -->
+    <style name="Widget.GpaPlanner.Button" parent="Widget.Material3.Button">
+        <item name="android:stateListAnimator">@animator/press_scale</item>
+    </style>
+
+    <style name="Widget.GpaPlanner.Button.Outlined" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:stateListAnimator">@animator/press_scale</item>
+    </style>
+
+    <!-- ===== Kiểu chữ: giữ cỡ chữ của Material 3, chỉ đổi font ===== -->
+    <style name="TextAppearance.GpaPlanner.DisplayLarge" parent="TextAppearance.Material3.DisplayLarge">
+        <item name="android:fontFamily">@font/be_vietnam_pro</item>
+        <item name="fontFamily">@font/be_vietnam_pro</item>
+    </style>
+    <style name="TextAppearance.GpaPlanner.DisplayMedium" parent="TextAppearance.Material3.DisplayMedium">
+        <item name="android:fontFamily">@font/be_vietnam_pro</item>
+        <item name="fontFamily">@font/be_vietnam_pro</item>
+    </style>
+    <style name="TextAppearance.GpaPlanner.DisplaySmall" parent="TextAppearance.Material3.DisplaySmall">
+        <item name="android:fontFamily">@font/be_vietnam_pro</item>
+        <item name="fontFamily">@font/be_vietnam_pro</item>
+    </style>
+    <style name="TextAppearance.GpaPlanner.HeadlineLarge" parent="TextAppearance.Material3.HeadlineLarge">
+        <item name="android:fontFamily">@font/be_vietnam_pro</item>
+        <item name="fontFamily">@font/be_vietnam_pro</item>
+    </style>
+    <style name="TextAppearance.GpaPlanner.HeadlineMedium" parent="TextAppearance.Material3.HeadlineMedium">
+        <item name="android:fontFamily">@font/be_vietnam_pro</item>
+        <item name="fontFamily">@font/be_vietnam_pro</item>
+    </style>
+    <style name="TextAppearance.GpaPlanner.HeadlineSmall" parent="TextAppearance.Material3.HeadlineSmall">
+        <item name="android:fontFamily">@font/be_vietnam_pro</item>
+        <item name="fontFamily">@font/be_vietnam_pro</item>
+    </style>
+    <style name="TextAppearance.GpaPlanner.TitleLarge" parent="TextAppearance.Material3.TitleLarge">
+        <item name="android:fontFamily">@font/be_vietnam_pro</item>
+        <item name="fontFamily">@font/be_vietnam_pro</item>
+    </style>
+    <style name="TextAppearance.GpaPlanner.TitleMedium" parent="TextAppearance.Material3.TitleMedium">
+        <item name="android:fontFamily">@font/be_vietnam_pro_medium_family</item>
+        <item name="fontFamily">@font/be_vietnam_pro_medium_family</item>
+    </style>
+    <style name="TextAppearance.GpaPlanner.TitleSmall" parent="TextAppearance.Material3.TitleSmall">
+        <item name="android:fontFamily">@font/be_vietnam_pro_medium_family</item>
+        <item name="fontFamily">@font/be_vietnam_pro_medium_family</item>
+    </style>
+    <style name="TextAppearance.GpaPlanner.BodyLarge" parent="TextAppearance.Material3.BodyLarge">
+        <item name="android:fontFamily">@font/be_vietnam_pro</item>
+        <item name="fontFamily">@font/be_vietnam_pro</item>
+    </style>
+    <style name="TextAppearance.GpaPlanner.BodyMedium" parent="TextAppearance.Material3.BodyMedium">
+        <item name="android:fontFamily">@font/be_vietnam_pro</item>
+        <item name="fontFamily">@font/be_vietnam_pro</item>
+    </style>
+    <style name="TextAppearance.GpaPlanner.BodySmall" parent="TextAppearance.Material3.BodySmall">
+        <item name="android:fontFamily">@font/be_vietnam_pro</item>
+        <item name="fontFamily">@font/be_vietnam_pro</item>
+    </style>
+    <style name="TextAppearance.GpaPlanner.LabelLarge" parent="TextAppearance.Material3.LabelLarge">
+        <item name="android:fontFamily">@font/be_vietnam_pro_medium_family</item>
+        <item name="fontFamily">@font/be_vietnam_pro_medium_family</item>
+    </style>
+    <style name="TextAppearance.GpaPlanner.LabelMedium" parent="TextAppearance.Material3.LabelMedium">
+        <item name="android:fontFamily">@font/be_vietnam_pro_medium_family</item>
+        <item name="fontFamily">@font/be_vietnam_pro_medium_family</item>
+    </style>
+    <style name="TextAppearance.GpaPlanner.LabelSmall" parent="TextAppearance.Material3.LabelSmall">
+        <item name="android:fontFamily">@font/be_vietnam_pro_medium_family</item>
+        <item name="fontFamily">@font/be_vietnam_pro_medium_family</item>
     </style>
 </resources>
