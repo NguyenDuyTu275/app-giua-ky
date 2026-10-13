@@ -16,11 +16,11 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.widget.NestedScrollView;
-import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.appgiuaky.gpaplanner.AppViewModel;
 import com.appgiuaky.gpaplanner.R;
+import com.appgiuaky.gpaplanner.components.TabFragment;
 import com.appgiuaky.gpaplanner.components.Ui;
 import com.appgiuaky.gpaplanner.types.AcademicData;
 import com.appgiuaky.gpaplanner.types.Classification;
@@ -40,12 +40,11 @@ import com.google.android.material.textfield.TextInputLayout;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /** Chức năng 2 & 3: lập kế hoạch đạt GPA mục tiêu, máy tính "Cứu môn" và giả lập học cải thiện. */
-public class SimulatorFragment extends Fragment {
+public class SimulatorFragment extends TabFragment {
 
     private static final int GAP = 12;
     private static final int TITLE_MEDIUM = com.google.android.material.R.attr.textAppearanceTitleMedium;
@@ -69,10 +68,6 @@ public class SimulatorFragment extends Fragment {
     private View view;
     private EditText targetInput;
     private EditText creditsInput;
-    private boolean inputsInitialized;
-    private String rescueCourseId;
-    /** Điểm dự kiến khi học cải thiện: id môn -> điểm chữ. */
-    private final Map<String, LetterGrade> improvements = new HashMap<>();
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle state) {
@@ -88,7 +83,7 @@ public class SimulatorFragment extends Fragment {
 
         ChipGroup chips = view.findViewById(R.id.target_chips);
         for (Classification c : TARGETS) {
-            Chip chip = Ui.filterChip(chips, c.label + " " + Format.fmt(c.minGpa, 1));
+            Chip chip = Ui.filterChip(chips, getString(R.string.target_chip, c.label, Format.fmt(c.minGpa, 1)));
             chip.setOnClickListener(v -> targetInput.setText(Format.plain(c.minGpa)));
             chips.addView(chip);
         }
@@ -110,9 +105,11 @@ public class SimulatorFragment extends Fragment {
             public void onTabReselected(TabLayout.Tab tab) {
             }
         });
+        tabs.selectTab(tabs.getTabAt(vm.plannerSection));
+        showSection(vm.plannerSection);
 
-        vm.getData().observe(getViewLifecycleOwner(), data -> {
-            if (!inputsInitialized) initInputs(data);
+        observeWhenVisible(vm.getData(), data -> {
+            if (!vm.plannerInputsInitialized) initInputs(data);
             renderTarget();
             renderRescue();
             renderImprove();
@@ -120,15 +117,21 @@ public class SimulatorFragment extends Fragment {
     }
 
     private void showSection(int index) {
+        if (index != vm.plannerSection) {
+            vm.plannerSection = index;
+            ((NestedScrollView) view.findViewById(R.id.scroll)).scrollTo(0, 0);
+        }
         view.findViewById(R.id.section_target).setVisibility(index == 0 ? View.VISIBLE : View.GONE);
         view.findViewById(R.id.section_rescue).setVisibility(index == 1 ? View.VISIBLE : View.GONE);
         view.findViewById(R.id.section_improve).setVisibility(index == 2 ? View.VISIBLE : View.GONE);
-        ((NestedScrollView) view.findViewById(R.id.scroll)).scrollTo(0, 0);
     }
 
-    /** Giá trị mặc định: mức xếp loại kế tiếp cao hơn GPA hiện tại, và số tín chỉ còn lại của chương trình. */
+    /**
+     * Giá trị mặc định: mức xếp loại kế tiếp cao hơn GPA hiện tại, và số tín chỉ còn lại của chương trình.
+     * Runs once per ViewModel, so values the user typed are not reset when the screen is recreated.
+     */
     private void initInputs(AcademicData data) {
-        inputsInitialized = true;
+        vm.plannerInputsInitialized = true;
         GpaCalculator.Summary current = GpaCalculator.cumulative(data.semesters);
         Classification target = TARGETS.get(0);
         for (Classification c : TARGETS) if (c.minGpa > current.gpa4) target = c;
@@ -161,9 +164,9 @@ public class SimulatorFragment extends Fragment {
         int remainingCredits = Math.max(0, data.totalProgramCredits - current.credits);
 
         ((TextView) view.findViewById(R.id.target_current)).setText(current.credits > 0
-                ? "GPA tích lũy " + Format.fmt(current.gpa4) + " (" + GpaCalculator.classify(current.gpa4).label
-                + ") trên " + current.credits + "/" + data.totalProgramCredits + " tín chỉ"
-                : "Chưa có môn nào được tính GPA");
+                ? getString(R.string.target_current, Format.fmt(current.gpa4), GpaCalculator.classify(current.gpa4).label,
+                        current.credits, data.totalProgramCredits)
+                : getString(R.string.no_gpa_yet));
 
         Double target = Format.parseNumber(targetInput.getText().toString());
         if (target != null && (target <= 0 || target > 4)) target = null;
@@ -171,10 +174,10 @@ public class SimulatorFragment extends Fragment {
         if (credits != null && credits <= 0) credits = null;
 
         TextInputLayout targetLayout = view.findViewById(R.id.target_input_layout);
-        targetLayout.setError(target == null ? "Nhập GPA từ 0 đến 4" : null);
+        targetLayout.setError(target == null ? getString(R.string.error_target_gpa) : null);
         TextInputLayout creditsLayout = view.findViewById(R.id.credits_input_layout);
-        creditsLayout.setHelperText("Số tín chỉ còn lại của chương trình: " + remainingCredits);
-        creditsLayout.setError(credits == null ? "Nhập số tín chỉ lớn hơn 0" : null);
+        creditsLayout.setHelperText(getString(R.string.credits_remaining_helper, remainingCredits));
+        creditsLayout.setError(credits == null ? getString(R.string.error_credits_positive) : null);
 
         ChipGroup chips = view.findViewById(R.id.target_chips);
         for (int i = 0; i < TARGETS.size(); i++) {
@@ -188,36 +191,35 @@ public class SimulatorFragment extends Fragment {
         GpaCalculator.TargetPlan plan = GpaCalculator.planTarget(current, target, credits);
         LetterGrade uniform = plan.uniformGrade;
         LinearLayout card = Ui.card(result, 0);
-        Ui.add(card, Ui.text(ctx(), "Kết quả", TITLE_MEDIUM), 0);
+        Ui.add(card, Ui.text(ctx(), getString(R.string.result), TITLE_MEDIUM), 0);
         if (uniform == null) {
-            Ui.add(card, Ui.text(ctx(), "Không thể đạt GPA " + Format.fmt(target) + " với " + credits
-                    + " tín chỉ: kể cả đạt A tất cả, GPA tích lũy cao nhất chỉ là " + Format.fmt(plan.maxReachable)
-                    + " (" + GpaCalculator.classify(plan.maxReachable).label + ").", BODY_MEDIUM, ERROR), 8);
+            Ui.add(card, Ui.text(ctx(), getString(R.string.target_impossible, Format.fmt(target), credits,
+                    Format.fmt(plan.maxReachable), GpaCalculator.classify(plan.maxReachable).label), BODY_MEDIUM, ERROR), 8);
             return;
         }
         if (uniform == GpaCalculator.PASSING.get(GpaCalculator.PASSING.size() - 1)) {
-            Ui.add(card, Ui.text(ctx(), "Chỉ cần qua tất cả các môn (từ D trở lên) là đạt mục tiêu.", BODY_MEDIUM), 8);
+            Ui.add(card, Ui.text(ctx(), getString(R.string.target_pass_all), BODY_MEDIUM), 8);
         } else {
-            Ui.add(card, Ui.text(ctx(), "GPA trung bình cần đạt cho " + credits + " tín chỉ sắp học:", BODY_MEDIUM), 8);
+            Ui.add(card, Ui.text(ctx(), getString(R.string.target_required, credits), BODY_MEDIUM), 8);
             TextView value = Ui.text(ctx(), Format.fmt(plan.requiredAvg),
                     com.google.android.material.R.attr.textAppearanceHeadlineMedium);
             value.setTypeface(value.getTypeface(), android.graphics.Typeface.BOLD);
             Ui.add(card, value, 0);
         }
         Ui.add(card, new MaterialDivider(ctx()), 8);
-        Ui.add(card, Ui.text(ctx(), "Phương án 1: mọi môn cùng một mức", TITLE_SMALL), 8);
-        Ui.add(card, gradeLine(uniform, "Tất cả " + credits + " TC đạt từ " + uniform.letter
-                + " (điểm hệ 10 ≥ " + Format.plain(uniform.minScore) + ")"), 8);
+        Ui.add(card, Ui.text(ctx(), getString(R.string.plan_uniform_title), TITLE_SMALL), 8);
+        Ui.add(card, gradeLine(uniform, getString(R.string.plan_uniform, credits, uniform.letter,
+                Format.plain(uniform.minScore))), 8);
         GpaCalculator.Mix mix = plan.mix;
         if (mix != null) {
-            Ui.add(card, Ui.text(ctx(), "Phương án 2: kết hợp hai mức", TITLE_SMALL), 8);
-            Ui.add(card, gradeLine(mix.high, mix.highCredits + " TC đạt từ " + mix.high.letter
-                    + " (≥ " + Format.plain(mix.high.minScore) + ")"), 8);
-            Ui.add(card, gradeLine(mix.low, mix.lowCredits + " TC còn lại đạt từ " + mix.low.letter
-                    + " (≥ " + Format.plain(mix.low.minScore) + ")"), 8);
+            Ui.add(card, Ui.text(ctx(), getString(R.string.plan_mix_title), TITLE_SMALL), 8);
+            Ui.add(card, gradeLine(mix.high, getString(R.string.plan_mix_high, mix.highCredits, mix.high.letter,
+                    Format.plain(mix.high.minScore))), 8);
+            Ui.add(card, gradeLine(mix.low, getString(R.string.plan_mix_low, mix.lowCredits, mix.low.letter,
+                    Format.plain(mix.low.minScore))), 8);
         }
         Ui.add(card, new MaterialDivider(ctx()), 8);
-        Ui.add(card, Ui.text(ctx(), "Nếu đạt A tất cả, GPA tích lũy tối đa là " + Format.fmt(plan.maxReachable) + ".",
+        Ui.add(card, Ui.text(ctx(), getString(R.string.max_reachable, Format.fmt(plan.maxReachable)),
                 BODY_SMALL, ON_SURFACE_VARIANT), 8);
     }
 
@@ -238,12 +240,12 @@ public class SimulatorFragment extends Fragment {
         if (none) return;
 
         Course course = pending.get(0);
-        for (Course c : pending) if (c.id.equals(rescueCourseId)) course = c;
+        for (Course c : pending) if (c.id.equals(vm.rescueCourseId)) course = c;
         for (Course c : pending) {
             Chip chip = Ui.filterChip(chips, c.name);
             chip.setChecked(c == course);
             chip.setOnClickListener(v -> {
-                rescueCourseId = c.id;
+                vm.rescueCourseId = c.id;
                 renderRescue();
             });
             chips.addView(chip);
@@ -251,28 +253,30 @@ public class SimulatorFragment extends Fragment {
 
         LinearLayout info = Ui.card(content, 0);
         Ui.add(info, Ui.text(ctx(), course.name, TITLE_MEDIUM), 0);
-        Ui.add(info, Ui.text(ctx(), course.code + " • " + course.credits + " TC", BODY_SMALL, ON_SURFACE_VARIANT), 0);
+        Ui.add(info, Ui.text(ctx(), Ui.courseMeta(ctx(), course), BODY_SMALL, ON_SURFACE_VARIANT), 0);
         List<String> remaining = new ArrayList<>();
         for (GradeComponent g : course.components) {
-            Ui.add(info, Ui.text(ctx(), g.name + " (" + Format.plain(g.weight) + "%): "
-                    + (g.score == null ? "chưa có" : Format.fmt(g.score, 1)), BODY_MEDIUM), 4);
-            if (g.score == null) remaining.add(g.name + " (" + Format.plain(g.weight) + "%)");
+            String weighted = getString(R.string.component_weight, g.name, Format.plain(g.weight));
+            Ui.add(info, Ui.text(ctx(), getString(R.string.component_score, weighted,
+                    g.score == null ? getString(R.string.rescue_not_yet) : Format.fmt(g.score, 1)), BODY_MEDIUM), 4);
+            if (g.score == null) remaining.add(weighted);
         }
 
         LinearLayout table = Ui.card(content, GAP);
-        Ui.add(table, Ui.text(ctx(), "Điểm trung bình cần đạt ở: " + Format.join(", ", remaining), TITLE_SMALL), 0);
+        Ui.add(table, Ui.text(ctx(), getString(R.string.rescue_remaining_title, Format.join(", ", remaining)),
+                TITLE_SMALL), 0);
         for (GpaCalculator.RescueRow row : GpaCalculator.rescue(course)) {
-            LinearLayout line = gradeLine(row.grade, "Điểm HP ≥ " + Format.plain(row.grade.minScore));
+            LinearLayout line = gradeLine(row.grade, getString(R.string.rescue_threshold, Format.plain(row.grade.minScore)));
             String need;
             int color;
             if (row.need == null) {
-                need = "Không thể";
+                need = getString(R.string.rescue_impossible);
                 color = ERROR;
             } else if (row.need == 0.0) {
-                need = "Chắc chắn đạt";
+                need = getString(R.string.rescue_safe);
                 color = PRIMARY;
             } else {
-                need = "Cần ≥ " + Format.fmt(row.need, 1);
+                need = getString(R.string.rescue_need, Format.fmt(row.need, 1));
                 color = com.google.android.material.R.attr.colorOnSurface;
             }
             line.addView(Ui.text(ctx(), need, TITLE_SMALL, color));
@@ -284,6 +288,7 @@ public class SimulatorFragment extends Fragment {
 
     private void renderImprove() {
         List<Semester> semesters = vm.current().semesters;
+        Map<String, LetterGrade> improvements = vm.improvements;
         GpaCalculator.Summary current = GpaCalculator.cumulative(semesters);
         GpaCalculator.Summary simulated = GpaCalculator.cumulative(semesters, improvements);
 
@@ -300,11 +305,11 @@ public class SimulatorFragment extends Fragment {
         LinearLayout summary = Ui.card(section, 0);
         LinearLayout header = new LinearLayout(ctx());
         header.setGravity(Gravity.CENTER_VERTICAL);
-        header.addView(Ui.text(ctx(), "GPA tích lũy giả lập", TITLE_MEDIUM),
+        header.addView(Ui.text(ctx(), getString(R.string.improve_title), TITLE_MEDIUM),
                 new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
         if (!improvements.isEmpty()) {
             MaterialButton reset = new MaterialButton(ctx(), null, androidx.appcompat.R.attr.borderlessButtonStyle);
-            reset.setText("Đặt lại");
+            reset.setText(R.string.reset);
             reset.setOnClickListener(v -> {
                 improvements.clear();
                 renderImprove();
@@ -318,6 +323,7 @@ public class SimulatorFragment extends Fragment {
         values.addView(Ui.text(ctx(), Format.fmt(current.gpa4), com.google.android.material.R.attr.textAppearanceHeadlineSmall));
         ImageView arrow = new ImageView(ctx());
         arrow.setImageResource(R.drawable.ic_arrow_forward);
+        arrow.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
         LinearLayout.LayoutParams arrowLp = new LinearLayout.LayoutParams(Ui.dp(ctx(), 20), Ui.dp(ctx(), 20));
         arrowLp.setMargins(Ui.dp(ctx(), 8), 0, Ui.dp(ctx(), 8), 0);
         values.addView(arrow, arrowLp);
@@ -326,21 +332,19 @@ public class SimulatorFragment extends Fragment {
         values.addView(sim);
         double delta = simulated.gpa4 - current.gpa4;
         if (delta > 0.00001) {
-            TextView deltaText = Ui.text(ctx(), "+" + Format.fmt(delta), TITLE_MEDIUM, PRIMARY);
+            TextView deltaText = Ui.text(ctx(), getString(R.string.gpa_delta, Format.fmt(delta)), TITLE_MEDIUM, PRIMARY);
             deltaText.setPadding(Ui.dp(ctx(), 8), 0, 0, 0);
             values.addView(deltaText);
         }
         Ui.add(summary, values, 0);
-        Ui.add(summary, Ui.text(ctx(), "Xếp loại: " + GpaCalculator.classify(current.gpa4).label + " → "
-                + GpaCalculator.classify(simulated.gpa4).label + " • " + simulated.credits + " TC tích lũy", BODY_SMALL), 0);
+        Ui.add(summary, Ui.text(ctx(), getString(R.string.improve_summary, GpaCalculator.classify(current.gpa4).label,
+                GpaCalculator.classify(simulated.gpa4).label, simulated.credits), BODY_SMALL), 0);
 
         if (candidates.isEmpty()) {
-            Ui.add(section, Ui.text(ctx(), "Không có môn nào để cải thiện (mọi môn đã đạt A hoặc chưa có điểm tổng kết).",
-                    BODY_MEDIUM), GAP);
+            Ui.add(section, Ui.text(ctx(), getString(R.string.improve_none), BODY_MEDIUM), GAP);
             return;
         }
-        Ui.add(section, Ui.text(ctx(), "Chọn điểm dự kiến nếu học lại/cải thiện. Môn ở trên cùng giúp tăng GPA nhiều nhất.",
-                BODY_SMALL, ON_SURFACE_VARIANT), GAP);
+        Ui.add(section, Ui.text(ctx(), getString(R.string.improve_hint), BODY_SMALL, ON_SURFACE_VARIANT), GAP);
         LinearLayout list = Ui.card(section, GAP);
         list.setPadding(0, Ui.dp(ctx(), 4), 0, Ui.dp(ctx(), 4));
         LayoutInflater inflater = LayoutInflater.from(ctx());
@@ -356,28 +360,30 @@ public class SimulatorFragment extends Fragment {
 
     private View improvementRow(LayoutInflater inflater, ViewGroup parent, Course course) {
         LetterGrade current = GpaCalculator.courseGrade(course);
-        LetterGrade selected = improvements.get(course.id);
+        LetterGrade selected = vm.improvements.get(course.id);
         View row = inflater.inflate(R.layout.item_improvement, parent, false);
         ((TextView) row.findViewById(R.id.improve_name)).setText(course.name);
-        ((TextView) row.findViewById(R.id.improve_meta)).setText(course.code + " • " + course.credits + " TC");
+        ((TextView) row.findViewById(R.id.improve_meta)).setText(Ui.courseMeta(ctx(), course));
         ((FrameLayout) row.findViewById(R.id.improve_current)).addView(Ui.badge(ctx(), current.letter));
 
         MaterialButton choose = row.findViewById(R.id.improve_choose);
-        choose.setText(selected != null ? selected.letter : "Giữ");
-        choose.setContentDescription("Chọn điểm dự kiến cho " + course.name);
+        if (selected != null) choose.setText(selected.letter);
+        else choose.setText(R.string.keep);
+        choose.setContentDescription(getString(R.string.improve_choose_description, course.name));
         choose.setOnClickListener(v -> {
             PopupMenu menu = new PopupMenu(ctx(), choose);
-            menu.getMenu().add(0, 0, 0, "Giữ nguyên");
+            menu.getMenu().add(0, 0, 0, R.string.keep_current);
             List<LetterGrade> options = new ArrayList<>();
             for (LetterGrade g : GpaCalculator.PASSING) {
                 if (g.point > current.point) {
                     options.add(g);
-                    menu.getMenu().add(0, options.size(), options.size(), g.letter + " (≥ " + Format.plain(g.minScore) + ")");
+                    menu.getMenu().add(0, options.size(), options.size(),
+                            getString(R.string.grade_option, g.letter, Format.plain(g.minScore)));
                 }
             }
             menu.setOnMenuItemClickListener(item -> {
-                if (item.getItemId() == 0) improvements.remove(course.id);
-                else improvements.put(course.id, options.get(item.getItemId() - 1));
+                if (item.getItemId() == 0) vm.improvements.remove(course.id);
+                else vm.improvements.put(course.id, options.get(item.getItemId() - 1));
                 renderImprove();
                 return true;
             });

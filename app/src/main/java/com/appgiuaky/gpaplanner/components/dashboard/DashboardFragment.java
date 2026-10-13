@@ -9,11 +9,11 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.appgiuaky.gpaplanner.AppViewModel;
 import com.appgiuaky.gpaplanner.R;
+import com.appgiuaky.gpaplanner.components.TabFragment;
 import com.appgiuaky.gpaplanner.components.Ui;
 import com.appgiuaky.gpaplanner.types.AcademicData;
 import com.appgiuaky.gpaplanner.types.Course;
@@ -28,7 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /** Chức năng 4: thẻ thống kê, biểu đồ đường GPA theo kỳ và biểu đồ tròn phân bố điểm chữ. */
-public class DashboardFragment extends Fragment {
+public class DashboardFragment extends TabFragment {
 
     private View view;
 
@@ -41,13 +41,13 @@ public class DashboardFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle state) {
         this.view = view;
         LinearLayout legend = view.findViewById(R.id.line_legend);
-        legend.addView(Ui.legend(requireContext(), LineChartView.SEMESTER_COLOR, "GPA học kỳ"));
-        View cumulative = Ui.legend(requireContext(), LineChartView.CUMULATIVE_COLOR, "GPA tích lũy");
+        legend.addView(Ui.legend(requireContext(), LineChartView.SEMESTER_COLOR, getString(R.string.semester_gpa)));
+        View cumulative = Ui.legend(requireContext(), LineChartView.CUMULATIVE_COLOR, getString(R.string.cumulative_gpa));
         cumulative.setPadding(Ui.dp(requireContext(), 16), 0, 0, 0);
         legend.addView(cumulative);
 
         AppViewModel vm = new ViewModelProvider(requireActivity()).get(AppViewModel.class);
-        vm.getData().observe(getViewLifecycleOwner(), this::render);
+        observeWhenVisible(vm.getData(), this::render);
     }
 
     private void render(AcademicData data) {
@@ -61,31 +61,43 @@ public class DashboardFragment extends Fragment {
         }
         boolean hasGpa = total.credits > 0;
 
-        stat(R.id.stat_gpa4, "GPA tích lũy (hệ 4)", hasGpa ? Format.fmt(total.gpa4) : "—",
-                hasGpa ? "Xếp loại: " + GpaCalculator.classify(total.gpa4).label : "Chưa có điểm", -1);
-        stat(R.id.stat_gpa10, "Điểm TB hệ 10", hasGpa ? Format.fmt(total.gpa10) : "—", "Trung bình theo tín chỉ", -1);
-        int progress = Math.min(100, total.credits * 100 / data.totalProgramCredits);
-        stat(R.id.stat_credits, "Tín chỉ tích lũy", total.credits + "/" + data.totalProgramCredits,
-                progress + "% chương trình", progress);
-        stat(R.id.stat_passed, "Môn đã qua", String.valueOf(best.size() - failed),
-                (failed > 0 ? "Nợ " + failed + " môn" : "Không nợ môn") + " • Đang học " + inProgress, -1);
+        stat(R.id.stat_gpa4, getString(R.string.stat_gpa4_title), hasGpa ? Format.fmt(total.gpa4) : getString(R.string.no_value),
+                hasGpa ? getString(R.string.classification, GpaCalculator.classify(total.gpa4).label)
+                        : getString(R.string.no_score_yet), -1);
+        stat(R.id.stat_gpa10, getString(R.string.stat_gpa10_title), hasGpa ? Format.fmt(total.gpa10) : getString(R.string.no_value),
+                getString(R.string.stat_gpa10_note), -1);
+        int progress = GpaCalculator.progressPercent(total.credits, data.totalProgramCredits);
+        stat(R.id.stat_credits, getString(R.string.stat_credits_title),
+                getString(R.string.credits_fraction, total.credits, data.totalProgramCredits),
+                getString(R.string.stat_credits_note, progress), progress);
+        String debt = failed > 0 ? getString(R.string.failed_count, failed) : getString(R.string.no_failed);
+        stat(R.id.stat_passed, getString(R.string.stat_passed_title), String.valueOf(best.size() - failed),
+                getString(R.string.stat_passed_note, debt, inProgress), -1);
 
         // Biểu đồ đường: các kỳ đã có điểm
         List<String> labels = new ArrayList<>();
         List<Double> semesterGpa = new ArrayList<>();
         List<Double> cumulativeGpa = new ArrayList<>();
+        List<String> points = new ArrayList<>();
         for (int i = 0; i < data.semesters.size(); i++) {
             GpaCalculator.Summary sem = GpaCalculator.semesterSummary(data.semesters.get(i));
             if (sem.credits == 0) continue;
-            labels.add(data.semesters.get(i).name.replace("Học kỳ", "HK"));
+            String label = data.semesters.get(i).name
+                    .replace(getString(R.string.semester_word), getString(R.string.semester_short));
+            labels.add(label);
             semesterGpa.add(sem.gpa4);
             cumulativeGpa.add(GpaCalculator.cumulative(data.semesters.subList(0, i + 1)).gpa4);
+            points.add(getString(R.string.chart_line_item, label, Format.fmt(sem.gpa4)));
         }
         boolean noLine = labels.isEmpty();
         view.findViewById(R.id.line_empty).setVisibility(noLine ? View.VISIBLE : View.GONE);
         view.findViewById(R.id.line_chart).setVisibility(noLine ? View.GONE : View.VISIBLE);
         view.findViewById(R.id.line_legend).setVisibility(noLine ? View.GONE : View.VISIBLE);
-        ((LineChartView) view.findViewById(R.id.line_chart)).setData(labels, toArray(semesterGpa), toArray(cumulativeGpa));
+        LineChartView lineChart = view.findViewById(R.id.line_chart);
+        lineChart.setData(labels, toArray(semesterGpa), toArray(cumulativeGpa));
+        // Screen readers cannot read a Canvas drawing, so describe the data instead
+        lineChart.setContentDescription(noLine ? null : getString(R.string.chart_line_description,
+                Format.join(", ", points), Format.fmt(cumulativeGpa.get(cumulativeGpa.size() - 1))));
 
         // Biểu đồ tròn: số môn theo điểm chữ (lần học tốt nhất của mỗi môn)
         List<String> letters = new ArrayList<>();
@@ -103,15 +115,20 @@ public class DashboardFragment extends Fragment {
         for (int i = 0; i < countArray.length; i++) countArray[i] = counts.get(i);
         view.findViewById(R.id.pie_empty).setVisibility(sum == 0 ? View.VISIBLE : View.GONE);
         view.findViewById(R.id.pie_row).setVisibility(sum == 0 ? View.GONE : View.VISIBLE);
-        ((PieChartView) view.findViewById(R.id.pie_chart)).setData(letters, countArray);
+        PieChartView pieChart = view.findViewById(R.id.pie_chart);
+        pieChart.setData(letters, countArray, getString(R.string.course_count, sum));
         LinearLayout pieLegend = view.findViewById(R.id.pie_legend);
         pieLegend.removeAllViews();
+        List<String> slices = new ArrayList<>();
         for (int i = 0; i < letters.size(); i++) {
             String letter = letters.get(i);
             int n = countArray[i];
-            Ui.add(pieLegend, Ui.legend(requireContext(), Ui.gradeColor(letter),
-                    letter + ": " + n + " môn (" + Math.round(n * 100.0 / sum) + "%)"), 4);
+            String item = getString(R.string.pie_legend_item, letter, n, Math.round(n * 100.0 / sum));
+            slices.add(item);
+            Ui.add(pieLegend, Ui.legend(requireContext(), Ui.gradeColor(letter), item), 4);
         }
+        pieChart.setContentDescription(sum == 0 ? null
+                : getString(R.string.chart_pie_description, Format.join(", ", slices)));
     }
 
     private void stat(int id, String title, String value, String note, int progress) {

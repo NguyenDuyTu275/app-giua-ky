@@ -43,7 +43,7 @@
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Thêm môn"
+                android:contentDescription="@string/add_course"
                 android:src="@drawable/ic_add"
                 app:tint="?attr/colorOnSurfaceVariant" />
 
@@ -52,7 +52,7 @@
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Tùy chọn học kỳ"
+                android:contentDescription="@string/semester_options"
                 android:src="@drawable/ic_more_vert"
                 app:tint="?attr/colorOnSurfaceVariant" />
         </LinearLayout>
@@ -63,7 +63,7 @@
             android:layout_height="wrap_content"
             android:paddingHorizontal="16dp"
             android:paddingVertical="8dp"
-            android:text="Chưa có môn học. Bấm + để thêm."
+            android:text="@string/no_courses"
             android:visibility="gone" />
 
         <LinearLayout

@@ -12,7 +12,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1.6"
-        android:hint="Tên">
+        android:hint="@string/component_name_hint">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/component_name"
@@ -27,7 +27,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="4dp"
         android:layout_weight="1"
-        android:hint="%">
+        android:hint="@string/component_weight_hint">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/component_weight"
@@ -43,7 +43,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="4dp"
         android:layout_weight="1"
-        android:hint="Điểm">
+        android:hint="@string/component_score_hint">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/component_score"
@@ -55,10 +55,10 @@
 
     <ImageButton
         android:id="@+id/component_remove"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
         android:background="?attr/selectableItemBackgroundBorderless"
-        android:contentDescription="Xóa thành phần"
+        android:contentDescription="@string/remove_component"
         android:src="@drawable/ic_close"
         app:tint="?attr/colorOnSurfaceVariant" />
 </LinearLayout>

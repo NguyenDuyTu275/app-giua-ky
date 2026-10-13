@@ -151,6 +151,13 @@ public class GpaCalculatorTest {
     }
 
     @Test
+    public void progressPercentHandlesInvalidTotalAndCapsAt100() {
+        assertEquals(0, GpaCalculator.progressPercent(40, 0));
+        assertEquals(30, GpaCalculator.progressPercent(40, 130));
+        assertEquals(100, GpaCalculator.progressPercent(140, 130));
+    }
+
+    @Test
     public void classifyUsesRoundedGpa() {
         assertEquals(Classification.VERY_GOOD, GpaCalculator.classify(3.196));
         assertEquals(Classification.GOOD, GpaCalculator.classify(3.194));

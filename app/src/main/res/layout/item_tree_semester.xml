@@ -44,6 +44,7 @@
                 android:id="@+id/tree_expand"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
+                android:importantForAccessibility="no"
                 android:src="@drawable/ic_expand_less" />
         </LinearLayout>
 

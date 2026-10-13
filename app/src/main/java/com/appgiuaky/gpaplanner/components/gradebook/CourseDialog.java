@@ -67,10 +67,10 @@ public final class CourseDialog {
         view.findViewById(R.id.add_component).setOnClickListener(v -> d.addRow("", "", ""));
 
         AlertDialog dialog = new MaterialAlertDialogBuilder(context)
-                .setTitle(initial == null ? "Thêm môn học" : "Sửa môn học")
+                .setTitle(initial == null ? R.string.add_course : R.string.edit_course)
                 .setView(view)
-                .setPositiveButton("Lưu", null)
-                .setNegativeButton("Hủy", null)
+                .setPositiveButton(R.string.save, null)
+                .setNegativeButton(R.string.cancel, null)
                 .create();
         if (onDelete != null) {
             View delete = view.findViewById(R.id.delete);
@@ -120,7 +120,7 @@ public final class CourseDialog {
 
     private void updateWeightSum() {
         double sum = weightSum();
-        weightSum.setText("Tổng trọng số: " + Format.plain(GpaCalculator.round2(sum)) + "%");
+        weightSum.setText(context.getString(R.string.weight_sum, Format.plain(GpaCalculator.round2(sum))));
         weightSum.setTextColor(Ui.color(context, Math.abs(sum - 100) > 0.01
                 ? androidx.appcompat.R.attr.colorError
                 : com.google.android.material.R.attr.colorOnSurfaceVariant));
@@ -146,23 +146,25 @@ public final class CourseDialog {
     }
 
     private String validate() {
-        if (code.getText().toString().trim().isEmpty()) return "Nhập mã môn";
-        if (name.getText().toString().trim().isEmpty()) return "Nhập tên môn";
+        if (code.getText().toString().trim().isEmpty()) return context.getString(R.string.error_code_required);
+        if (name.getText().toString().trim().isEmpty()) return context.getString(R.string.error_name_required);
         Integer creditsValue = Format.parseInt(credits.getText().toString());
-        if (creditsValue == null || creditsValue < 1 || creditsValue > 20) return "Số tín chỉ phải từ 1 đến 20";
-        if (components.getChildCount() == 0) return "Cần ít nhất một điểm thành phần";
+        if (creditsValue == null || !Course.isValidCredits(creditsValue)) {
+            return context.getString(R.string.error_credits_range, Course.MIN_CREDITS, Course.MAX_CREDITS);
+        }
+        if (components.getChildCount() == 0) return context.getString(R.string.error_no_components);
         for (int i = 0; i < components.getChildCount(); i++) {
             View row = components.getChildAt(i);
-            if (textOf(row, R.id.component_name).isEmpty()) return "Nhập tên cho mọi điểm thành phần";
+            if (textOf(row, R.id.component_name).isEmpty()) return context.getString(R.string.error_component_name);
             Double w = Format.parseNumber(textOf(row, R.id.component_weight));
-            if (w == null || w <= 0) return "Trọng số phải là số dương";
+            if (w == null || w <= 0) return context.getString(R.string.error_weight_positive);
         }
-        if (Math.abs(weightSum() - 100) > 0.01) return "Tổng trọng số phải bằng 100%";
+        if (Math.abs(weightSum() - 100) > 0.01) return context.getString(R.string.error_weight_sum);
         for (int i = 0; i < components.getChildCount(); i++) {
             String score = textOf(components.getChildAt(i), R.id.component_score);
             if (score.isEmpty()) continue;
             Double s = Format.parseNumber(score);
-            if (s == null || s < 0 || s > 10) return "Điểm phải là số từ 0 đến 10";
+            if (s == null || s < 0 || s > 10) return context.getString(R.string.error_score_range);
         }
         return null;
     }

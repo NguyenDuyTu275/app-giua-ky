@@ -1,3 +1,199 @@
 <resources>
     <string name="app_name">GPA Planner</string>
+
+    <!-- Chung -->
+    <string name="save">Lưu</string>
+    <string name="cancel">Hủy</string>
+    <string name="ok">Đồng ý</string>
+    <string name="undo">Hoàn tác</string>
+    <string name="reset">Đặt lại</string>
+    <string name="rename">Đổi tên</string>
+    <string name="result">Kết quả</string>
+    <string name="no_value">—</string>
+    <string name="credits_hint">Số tín chỉ</string>
+    <string name="credits_fraction">%1$d/%2$d</string>
+    <string name="classification">Xếp loại: %1$s</string>
+    <string name="course_meta">%1$s • %2$d TC</string>
+    <string name="course_meta_no_gpa">%1$s • %2$d TC • Không tính GPA</string>
+    <string name="course_meta_status">%1$s • %2$d TC • %3$s</string>
+    <string name="course_meta_status_no_gpa">%1$s • %2$d TC • Không tính GPA • %3$s</string>
+    <string name="component_score">%1$s: %2$s</string>
+    <string name="component_weight">%1$s (%2$s%%)</string>
+    <string name="grade_option">%1$s (≥ %2$s)</string>
+    <string name="semester_word">Học kỳ</string>
+    <string name="semester_short">HK</string>
+
+    <!-- Thanh điều hướng và tiêu đề màn hình -->
+    <string name="nav_dashboard">Tổng quan</string>
+    <string name="nav_planner">Kế hoạch</string>
+    <string name="nav_curriculum">Chương trình</string>
+    <string name="nav_advisor">Cố vấn AI</string>
+    <string name="title_dashboard">Tổng quan học tập</string>
+    <string name="title_gradebook">Bảng điểm</string>
+    <string name="title_planner">Kế hoạch học tập</string>
+    <string name="title_curriculum">Chương trình đào tạo</string>
+    <string name="title_advisor">Cố vấn học vụ AI</string>
+
+    <!-- Tổng quan -->
+    <string name="stat_gpa4_title">GPA tích lũy (hệ 4)</string>
+    <string name="stat_gpa10_title">Điểm TB hệ 10</string>
+    <string name="stat_gpa10_note">Trung bình theo tín chỉ</string>
+    <string name="stat_credits_title">Tín chỉ tích lũy</string>
+    <string name="stat_credits_note">%1$d%% chương trình</string>
+    <string name="stat_passed_title">Môn đã qua</string>
+    <string name="stat_passed_note">%1$s • Đang học %2$d</string>
+    <string name="failed_count">Nợ %1$d môn</string>
+    <string name="no_failed">Không nợ môn</string>
+    <string name="no_score_yet">Chưa có điểm</string>
+    <string name="semester_gpa">GPA học kỳ</string>
+    <string name="cumulative_gpa">GPA tích lũy</string>
+    <string name="chart_line_title">GPA theo học kỳ</string>
+    <string name="chart_line_empty">Chưa có học kỳ nào có điểm.</string>
+    <string name="chart_line_item">%1$s: %2$s</string>
+    <string name="chart_line_description">Biểu đồ GPA học kỳ: %1$s. GPA tích lũy mới nhất: %2$s</string>
+    <string name="chart_pie_title">Phân bố điểm chữ</string>
+    <string name="chart_pie_empty">Chưa có môn nào có điểm.</string>
+    <string name="chart_pie_description">Phân bố điểm chữ: %1$s</string>
+    <string name="pie_legend_item">%1$s: %2$d môn (%3$d%%)</string>
+    <string name="course_count">%1$d môn</string>
+
+    <!-- Bảng điểm -->
+    <string name="gradebook_empty">Chưa có học kỳ nào. Bấm + để thêm học kỳ, hoặc nhập từ file Excel.</string>
+    <string name="add_semester">Thêm học kỳ</string>
+    <string name="semester_default_name">Học kỳ %1$d</string>
+    <string name="semester_name_hint">Tên học kỳ</string>
+    <string name="rename_semester">Đổi tên học kỳ</string>
+    <string name="delete_semester">Xóa học kỳ</string>
+    <string name="delete_semester_title">Xóa %1$s?</string>
+    <string name="delete_semester_message">Toàn bộ %1$d môn trong học kỳ này sẽ bị xóa.</string>
+    <string name="semester_options">Tùy chọn học kỳ</string>
+    <string name="semester_summary">GPA kỳ: %1$s • Hệ 10: %2$s • %3$d TC</string>
+    <string name="semester_summary_no_score">%1$d TC • chưa có điểm tổng kết</string>
+    <string name="no_courses">Chưa có môn học. Bấm + để thêm.</string>
+    <string name="course_deleted">Đã xóa môn %1$s</string>
+    <string name="undo_failed">Không hoàn tác được vì học kỳ đã bị xóa</string>
+    <string name="export_excel">Xuất ra Excel</string>
+    <string name="import_excel">Nhập từ Excel</string>
+    <string name="export_file_name">bang_diem.xlsx</string>
+    <string name="export_done">Đã xuất bảng điểm ra file Excel</string>
+    <string name="export_failed">Xuất file thất bại: %1$s</string>
+    <string name="import_read_failed">Không đọc được file: %1$s</string>
+    <string name="import_confirm_title">Nhập bảng điểm từ Excel?</string>
+    <string name="import_confirm_message">Đọc được %1$d học kỳ, %2$d môn. Bảng điểm hiện tại sẽ được thay thế.</string>
+    <string name="import_done">Đã nhập bảng điểm</string>
+
+    <!-- Hộp thoại môn học -->
+    <string name="add_course">Thêm môn học</string>
+    <string name="edit_course">Sửa môn học</string>
+    <string name="delete_course">Xóa môn học này</string>
+    <string name="course_code_hint">Mã môn</string>
+    <string name="course_name_hint">Tên môn</string>
+    <string name="count_in_gpa">Tính GPA</string>
+    <string name="components_title">Điểm thành phần (để trống nếu chưa có điểm)</string>
+    <string name="add_component">Thêm thành phần</string>
+    <string name="remove_component">Xóa thành phần</string>
+    <string name="component_name_hint">Tên</string>
+    <string name="component_weight_hint" formatted="false">%</string>
+    <string name="component_score_hint">Điểm</string>
+    <string name="weight_sum">Tổng trọng số: %1$s%%</string>
+    <string name="error_code_required">Nhập mã môn</string>
+    <string name="error_name_required">Nhập tên môn</string>
+    <string name="error_credits_range">Số tín chỉ phải từ %1$d đến %2$d</string>
+    <string name="error_no_components">Cần ít nhất một điểm thành phần</string>
+    <string name="error_component_name">Nhập tên cho mọi điểm thành phần</string>
+    <string name="error_weight_positive">Trọng số phải là số dương</string>
+    <string name="error_weight_sum" formatted="false">Tổng trọng số phải bằng 100%</string>
+    <string name="error_score_range">Điểm phải là số từ 0 đến 10</string>
+
+    <!-- Kế hoạch: Mục tiêu GPA -->
+    <string name="tab_target">Mục tiêu GPA</string>
+    <string name="tab_rescue">Cứu môn</string>
+    <string name="tab_improve">Học cải thiện</string>
+    <string name="current">Hiện tại</string>
+    <string name="target">Mục tiêu</string>
+    <string name="target_chip">%1$s %2$s</string>
+    <string name="target_gpa_hint">GPA tích lũy mong muốn (hệ 4)</string>
+    <string name="planned_credits_hint">Số tín chỉ sẽ học thêm</string>
+    <string name="target_current">GPA tích lũy %1$s (%2$s) trên %3$d/%4$d tín chỉ</string>
+    <string name="no_gpa_yet">Chưa có môn nào được tính GPA</string>
+    <string name="error_target_gpa">Nhập GPA từ 0 đến 4</string>
+    <string name="error_credits_positive">Nhập số tín chỉ lớn hơn 0</string>
+    <string name="credits_remaining_helper">Số tín chỉ còn lại của chương trình: %1$d</string>
+    <string name="target_impossible">Không thể đạt GPA %1$s với %2$d tín chỉ: kể cả đạt A tất cả, GPA tích lũy cao nhất chỉ là %3$s (%4$s).</string>
+    <string name="target_pass_all">Chỉ cần qua tất cả các môn (từ D trở lên) là đạt mục tiêu.</string>
+    <string name="target_required">GPA trung bình cần đạt cho %1$d tín chỉ sắp học:</string>
+    <string name="plan_uniform_title">Phương án 1: mọi môn cùng một mức</string>
+    <string name="plan_uniform">Tất cả %1$d TC đạt từ %2$s (điểm hệ 10 ≥ %3$s)</string>
+    <string name="plan_mix_title">Phương án 2: kết hợp hai mức</string>
+    <string name="plan_mix_high">%1$d TC đạt từ %2$s (≥ %3$s)</string>
+    <string name="plan_mix_low">%1$d TC còn lại đạt từ %2$s (≥ %3$s)</string>
+    <string name="max_reachable">Nếu đạt A tất cả, GPA tích lũy tối đa là %1$s.</string>
+
+    <!-- Kế hoạch: Cứu môn -->
+    <string name="rescue_empty">Không có môn nào đang học. Thêm môn chưa đủ điểm thành phần trong Bảng điểm để tính.</string>
+    <string name="rescue_choose">Chọn môn đang học</string>
+    <string name="rescue_not_yet">chưa có</string>
+    <string name="rescue_remaining_title">Điểm trung bình cần đạt ở: %1$s</string>
+    <string name="rescue_threshold">Điểm HP ≥ %1$s</string>
+    <string name="rescue_impossible">Không thể</string>
+    <string name="rescue_safe">Chắc chắn đạt</string>
+    <string name="rescue_need">Cần ≥ %1$s</string>
+
+    <!-- Kế hoạch: Học cải thiện -->
+    <string name="improve_title">GPA tích lũy giả lập</string>
+    <string name="gpa_delta">+%1$s</string>
+    <string name="improve_summary">Xếp loại: %1$s → %2$s • %3$d TC tích lũy</string>
+    <string name="improve_none">Không có môn nào để cải thiện (mọi môn đã đạt A hoặc chưa có điểm tổng kết).</string>
+    <string name="improve_hint">Chọn điểm dự kiến nếu học lại/cải thiện. Môn ở trên cùng giúp tăng GPA nhiều nhất.</string>
+    <string name="keep">Giữ</string>
+    <string name="keep_current">Giữ nguyên</string>
+    <string name="improve_choose_description">Chọn điểm dự kiến cho %1$s</string>
+
+    <!-- Chương trình đào tạo -->
+    <string name="program_progress">Tiến độ chương trình</string>
+    <string name="curriculum_empty">Chưa có học kỳ nào. Thêm học kỳ và môn học trong tab Bảng điểm.</string>
+    <string name="edit_program_credits">Sửa tổng tín chỉ chương trình</string>
+    <string name="program_credits_title">Tổng tín chỉ chương trình</string>
+    <string name="program_credits_helper">Số tín chỉ cần tích lũy để tốt nghiệp (%1$d - %2$d)</string>
+    <string name="progress_text">%1$d/%2$d tín chỉ tích lũy (%3$d%%)</string>
+    <string name="progress_text_failed">%1$d/%2$d tín chỉ tích lũy (%3$d%%) • Nợ %4$d môn</string>
+    <string name="segment_earned">Đã tích lũy</string>
+    <string name="segment_unscheduled">Chưa xếp kỳ</string>
+    <string name="legend_credits">%1$s: %2$d TC</string>
+    <string name="tree_summary">%1$d TC • %2$d/%3$d môn có điểm</string>
+    <string name="tree_summary_gpa">%1$d TC • %2$d/%3$d môn có điểm • GPA kỳ %4$s</string>
+    <string name="expanded">Đang mở</string>
+    <string name="collapsed">Đã thu gọn</string>
+    <string name="node_passed">Đã đạt</string>
+    <string name="node_failed">Nợ môn</string>
+    <string name="node_replaced">Đã học lại</string>
+    <string name="node_in_progress">Đang học</string>
+    <string name="node_planned">Chưa học</string>
+
+    <!-- Cố vấn AI -->
+    <string name="tab_chat">Hỏi đáp</string>
+    <string name="study_plan">Lịch ôn thi</string>
+    <string name="missing_key_title">Chưa có Gemini API key</string>
+    <string name="missing_key_text">Cố vấn AI dùng Google Gemini (%1$s). Tạo key miễn phí tại aistudio.google.com/apikey rồi nhập vào đây. Key chỉ được lưu trên máy này.</string>
+    <string name="enter_api_key">Nhập API key</string>
+    <string name="api_key_title">Gemini API key</string>
+    <string name="api_key_hint">API key</string>
+    <string name="api_key_helper">Tạo key tại aistudio.google.com/apikey. Để trống rồi Lưu để xóa key.</string>
+    <string name="chat_hint">Nhập câu hỏi…</string>
+    <string name="send">Gửi</string>
+    <string name="chat_intro">Hỏi cố vấn về bảng điểm, mục tiêu GPA, môn nên học cải thiện… Cố vấn đọc được toàn bộ bảng điểm của bạn. Ví dụ:</string>
+    <string name="chat_typing">Đang trả lời…</string>
+    <string-array name="advisor_suggestions">
+        <item>Các kỳ sau em cần đạt bao nhiêu điểm để tốt nghiệp loại Giỏi?</item>
+        <item>Nên học cải thiện môn nào để tăng GPA nhiều nhất?</item>
+        <item>Kỳ này em cần chú ý môn nào nhất?</item>
+    </string-array>
+    <string name="plan_intro">Chọn ngày thi cho các môn cần ôn. AI sẽ xếp lịch theo từng ngày, ưu tiên môn thi sớm và môn cần điểm cao.</string>
+    <string name="plan_empty">Không có môn nào đang học. Thêm môn chưa đủ điểm thành phần trong Bảng điểm.</string>
+    <string name="hours_label">Thời gian ôn mỗi ngày: %1$d giờ</string>
+    <string name="exam_date">Ngày thi</string>
+    <string name="exam_date_title">Ngày thi %1$s</string>
+    <string name="clear_exam_date">Bỏ ngày thi</string>
+    <string name="plan_generate">Lập lịch ôn thi (%1$d môn)</string>
+    <string name="plan_generating">Đang lập lịch…</string>
 </resources>

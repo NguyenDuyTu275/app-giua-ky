@@ -20,6 +20,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.core.widget.TextViewCompat;
 
 import com.appgiuaky.gpaplanner.R;
+import com.appgiuaky.gpaplanner.types.Course;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.color.MaterialColors;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -51,6 +52,12 @@ public final class Ui {
             case "D": return 0xFFD84315;
             default: return 0xFFC62828;
         }
+    }
+
+    /** "MATH101 • 3 TC", with a "not counted in GPA" note when it applies. */
+    public static String courseMeta(Context c, Course course) {
+        return c.getString(course.countInGpa ? R.string.course_meta : R.string.course_meta_no_gpa,
+                course.code, course.credits);
     }
 
     /** Màu lấy từ theme, ví dụ R.attr.colorOnSurfaceVariant (tự đổi theo chế độ sáng/tối). */
@@ -153,8 +160,8 @@ public final class Ui {
         AlertDialog dialog = new MaterialAlertDialogBuilder(c)
                 .setTitle(title)
                 .setView(view)
-                .setPositiveButton("Lưu", null)
-                .setNegativeButton("Hủy", null)
+                .setPositiveButton(R.string.save, null)
+                .setNegativeButton(R.string.cancel, null)
                 .create();
         dialog.setOnShowListener(d -> {
             Button ok = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
@@ -177,8 +184,8 @@ public final class Ui {
         new MaterialAlertDialogBuilder(c)
                 .setTitle(title)
                 .setMessage(message)
-                .setPositiveButton("Đồng ý", (d, w) -> onConfirm.run())
-                .setNegativeButton("Hủy", null)
+                .setPositiveButton(R.string.ok, (d, w) -> onConfirm.run())
+                .setNegativeButton(R.string.cancel, null)
                 .show();
     }
 

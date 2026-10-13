@@ -68,6 +68,16 @@ public final class GeminiService {
         return f.format(new Date(utcMillis));
     }
 
+    /**
+     * The last [max] messages, with leading advisor messages dropped because Gemini expects a
+     * conversation to start with a user turn.
+     */
+    public static List<ChatMessage> recentHistory(List<ChatMessage> messages, int max) {
+        int start = Math.max(0, messages.size() - max);
+        while (start < messages.size() && !messages.get(start).fromUser) start++;
+        return new ArrayList<>(messages.subList(start, messages.size()));
+    }
+
     /** Gửi system prompt + lịch sử hội thoại, trả về câu trả lời dạng văn bản. */
     public static String generate(String apiKey, String systemPrompt, List<ChatMessage> history) throws IOException {
         String body;

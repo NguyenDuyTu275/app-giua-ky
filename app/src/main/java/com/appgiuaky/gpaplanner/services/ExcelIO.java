@@ -123,7 +123,9 @@ public final class ExcelIO {
             String code = row.cell(1);
             if (code.isEmpty()) throw row.fail("thiếu mã môn");
             Double creditsValue = Format.parseNumber(row.cell(3));
-            if (creditsValue == null || creditsValue.intValue() <= 0) throw row.fail("số tín chỉ không hợp lệ");
+            if (creditsValue == null || !Course.isValidCredits(creditsValue)) {
+                throw row.fail("số tín chỉ phải là số nguyên từ " + Course.MIN_CREDITS + " đến " + Course.MAX_CREDITS);
+            }
 
             List<GradeComponent> components = new ArrayList<>();
             double weightSum = 0;

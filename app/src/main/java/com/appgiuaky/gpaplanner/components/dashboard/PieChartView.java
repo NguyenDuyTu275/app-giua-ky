@@ -22,6 +22,7 @@ public class PieChartView extends View {
 
     private List<String> letters = new ArrayList<>();
     private int[] counts = new int[0];
+    private String centerText = "";
 
     public PieChartView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -32,9 +33,11 @@ public class PieChartView extends View {
         center.setFakeBoldText(true);
     }
 
-    public void setData(List<String> letters, int[] counts) {
+    /** [centerText] is drawn in the middle of the ring, e.g. the total number of courses. */
+    public void setData(List<String> letters, int[] counts, String centerText) {
         this.letters = letters;
         this.counts = counts;
+        this.centerText = centerText;
         invalidate();
     }
 
@@ -53,7 +56,7 @@ public class PieChartView extends View {
             canvas.drawArc(bounds, start, sweep, false, arc);
             start += sweep;
         }
-        String text = total + " môn";
-        canvas.drawText(text, (getWidth() - center.measureText(text)) / 2, getHeight() / 2f + center.getTextSize() / 3, center);
+        canvas.drawText(centerText, (getWidth() - center.measureText(centerText)) / 2,
+                getHeight() / 2f + center.getTextSize() / 3, center);
     }
 }

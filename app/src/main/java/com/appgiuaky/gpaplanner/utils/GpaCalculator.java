@@ -88,6 +88,12 @@ public final class GpaCalculator {
         return new BigDecimal(x).setScale(6, RoundingMode.HALF_UP).setScale(digits, RoundingMode.HALF_UP).doubleValue();
     }
 
+    /** Earned credits as a percentage (0-100) of the program; 0 when the program total is invalid. */
+    public static int progressPercent(int earnedCredits, int totalCredits) {
+        if (totalCredits <= 0) return 0;
+        return Math.min(100, earnedCredits * 100 / totalCredits);
+    }
+
     public static LetterGrade letterOf(double score10) {
         for (LetterGrade g : SCALE) if (score10 >= g.minScore) return g;
         return SCALE.get(SCALE.size() - 1);

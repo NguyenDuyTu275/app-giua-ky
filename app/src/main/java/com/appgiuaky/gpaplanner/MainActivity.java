@@ -2,6 +2,7 @@ package com.appgiuaky.gpaplanner;
 
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -11,6 +12,7 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.appgiuaky.gpaplanner.components.aiadvisor.AIAdvisorFragment;
 import com.appgiuaky.gpaplanner.components.curriculum.CurriculumFragment;
@@ -53,6 +55,13 @@ public class MainActivity extends AppCompatActivity {
             return true;
         });
         showTab(bottomNav.getSelectedItemId());
+
+        AppViewModel vm = new ViewModelProvider(this).get(AppViewModel.class);
+        vm.getStorageNotice().observe(this, notice -> {
+            if (notice == null) return;
+            Toast.makeText(this, notice, Toast.LENGTH_LONG).show();
+            vm.clearStorageNotice();
+        });
     }
 
     /** Hiện màn hình của tab được chọn, ẩn các màn hình khác (giữ nguyên trạng thái khi quay lại). */

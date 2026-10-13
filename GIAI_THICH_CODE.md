@@ -182,7 +182,7 @@ Mỗi dòng là một môn: `Học kỳ | Mã môn | Tên môn | Số TC | Tính
 
 ### Gemini API
 
-- Gọi REST `models/gemini-3.8-flash:generateContent`, key gửi qua header `x-goog-api-key`.
+- Gọi REST `models/gemini-2.5-flash:generateContent`, key gửi qua header `x-goog-api-key`.
 - Người dùng tự nhập key (nút 🔑 trên tab Cố vấn AI). Key chỉ lưu trong `SharedPreferences` trên máy, không có trong code.
 - Prompt yêu cầu trả lời tiếng Việt, văn bản thuần; app còn bỏ ký hiệu markdown (`**`, `#`) trước khi hiển thị.
 - Gửi lỗi (sai key, mất mạng...) thì app hiện thông báo lỗi và trả câu hỏi về ô nhập để gửi lại.
@@ -192,6 +192,8 @@ Mỗi dòng là một môn: `Học kỳ | Mã môn | Tên môn | Số TC | Tính
 ## 5. Lưu dữ liệu
 
 - Bảng điểm: `files/academic.json` trong bộ nhớ riêng của app (`AcademicData.toJson()` / `fromJson()`). Định dạng giữ nguyên như bản 1.0 (viết bằng Kotlin), nên người đã cài bản cũ cập nhật lên vẫn còn dữ liệu.
+- Ghi file qua `DataFile`: ghi ra file tạm rồi đổi tên, nên tắt app giữa chừng không làm hỏng file. Việc ghi chạy trên luồng riêng, không phải chờ lệnh gọi Gemini.
+- Nếu file bị hỏng, app đổi tên nó thành `academic.json.corrupt-<thời điểm>` để giữ lại, báo cho người dùng rồi dùng dữ liệu mẫu.
 - API key: `SharedPreferences` tên `settings`.
 - Ngày thi đã chọn chỉ giữ trong bộ nhớ (mất khi tắt hẳn app).
 

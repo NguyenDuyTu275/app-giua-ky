@@ -9,7 +9,7 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        app:title="Chương trình đào tạo" />
+        app:title="@string/title_curriculum" />
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
@@ -35,7 +35,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Tiến độ chương trình"
+                        android:text="@string/program_progress"
                         android:textAppearance="?attr/textAppearanceTitleMedium" />
 
                     <TextView
@@ -68,7 +68,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:text="Chưa có học kỳ nào. Thêm học kỳ và môn học trong tab Bảng điểm."
+                android:text="@string/curriculum_empty"
                 android:visibility="gone" />
 
             <LinearLayout

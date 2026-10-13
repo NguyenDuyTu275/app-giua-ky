@@ -4,6 +4,8 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.text.TextPaint;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.View;
@@ -20,12 +22,17 @@ public class LineChartView extends View {
     public static final int SEMESTER_COLOR = 0xFF1E88E5;
     public static final int CUMULATIVE_COLOR = 0xFFF4511E;
 
+    /** Longer semester names are cut with "…" so they cannot run into each other. */
+    private static final int MAX_LABEL_DP = 64;
+    private static final int LABEL_GAP_DP = 8;
+
     private final Paint grid = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private final Paint label = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final TextPaint label = new TextPaint(Paint.ANTI_ALIAS_FLAG);
     private final Paint line = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint point = new Paint(Paint.ANTI_ALIAS_FLAG);
 
     private List<String> labels = new ArrayList<>();
+    private float widestLabel;
     private double[] semester = new double[0];
     private double[] cumulative = new double[0];
 
@@ -40,7 +47,14 @@ public class LineChartView extends View {
     }
 
     public void setData(List<String> labels, double[] semester, double[] cumulative) {
-        this.labels = labels;
+        float maxWidth = Ui.dp(getContext(), MAX_LABEL_DP);
+        this.labels = new ArrayList<>();
+        widestLabel = 0;
+        for (String l : labels) {
+            String shortened = TextUtils.ellipsize(l, label, maxWidth, TextUtils.TruncateAt.END).toString();
+            this.labels.add(shortened);
+            widestLabel = Math.max(widestLabel, label.measureText(shortened));
+        }
         this.semester = semester;
         this.cumulative = cumulative;
         invalidate();
@@ -60,10 +74,16 @@ public class LineChartView extends View {
             String text = String.valueOf(g);
             canvas.drawText(text, left - label.measureText(text) - Ui.dp(getContext(), 8), gy + label.getTextSize() / 3, label);
         }
-        // Tên học kỳ dưới trục ngang
-        for (int i = 0; i < labels.size(); i++) {
+        // Tên học kỳ dưới trục ngang; with many semesters only every [step]-th label fits
+        int n = labels.size();
+        float slot = n <= 1 ? right - left : (right - left) / (n - 1);
+        int step = Math.max(1, (int) Math.ceil((widestLabel + Ui.dp(getContext(), LABEL_GAP_DP)) / slot));
+        for (int i = 0; i < n; i += step) {
             String text = labels.get(i);
-            canvas.drawText(text, x(i, left, right) - label.measureText(text) / 2, bottom + label.getTextSize() + Ui.dp(getContext(), 4), label);
+            float width = label.measureText(text);
+            // Keep the first and last labels inside the view instead of cutting them at the edge
+            float x = Math.max(0, Math.min(getWidth() - width, x(i, left, right) - width / 2));
+            canvas.drawText(text, x, bottom + label.getTextSize() + Ui.dp(getContext(), 4), label);
         }
         series(canvas, cumulative, CUMULATIVE_COLOR, left, right, top, bottom);
         series(canvas, semester, SEMESTER_COLOR, left, right, top, bottom);

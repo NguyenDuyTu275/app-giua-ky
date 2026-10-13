@@ -9,7 +9,7 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        app:title="Bảng điểm" />
+        app:title="@string/title_gradebook" />
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
@@ -26,7 +26,7 @@
                 android:id="@+id/empty"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Chưa có học kỳ nào. Bấm + để thêm học kỳ, hoặc nhập từ file Excel."
+                android:text="@string/gradebook_empty"
                 android:visibility="gone" />
 
             <LinearLayout
