@@ -73,8 +73,6 @@
         <item name="android:background">@drawable/bg_header</item>
         <item name="titleTextColor">@android:color/white</item>
         <item name="titleTextAppearance">@style/TextAppearance.GpaPlanner.ToolbarTitle</item>
-        <item name="subtitleTextColor">@android:color/white</item>
-        <item name="subtitleTextAppearance">@style/TextAppearance.GpaPlanner.BodySmall</item>
         <item name="materialThemeOverlay">@style/ThemeOverlay.GpaPlanner.Toolbar</item>
     </style>
 

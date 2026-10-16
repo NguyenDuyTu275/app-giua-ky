@@ -5,13 +5,6 @@ plugins {
 // Thông tin khóa ký bản release, không có trong git (xem .gitignore)
 def keystoreFile = rootProject.file('keystore.properties')
 
-// Web client ID của Google (đăng nhập bằng Google), đặt trong local.properties để mỗi máy dùng cấu hình riêng:
-// GOOGLE_WEB_CLIENT_ID=xxxx.apps.googleusercontent.com
-def localProps = new Properties()
-def localPropsFile = rootProject.file('local.properties')
-if (localPropsFile.exists()) localPropsFile.withInputStream { localProps.load(it) }
-def googleWebClientId = localProps.getProperty('GOOGLE_WEB_CLIENT_ID', '')
-
 android {
     namespace 'com.appgiuaky.gpaplanner'
     compileSdk 37
@@ -22,11 +15,6 @@ android {
         targetSdk 37
         versionCode 1
         versionName '1.0'
-        buildConfigField 'String', 'GOOGLE_WEB_CLIENT_ID', "\"${googleWebClientId}\""
-    }
-
-    buildFeatures {
-        buildConfig = true
     }
 
     signingConfigs {
@@ -60,9 +48,5 @@ android {
 dependencies {
     implementation libs.androidx.appcompat
     implementation libs.material
-    // Đăng nhập bằng Google qua Credential Manager (chỉ lấy tên, email, ảnh; không cần Firebase)
-    implementation libs.androidx.credentials
-    implementation libs.androidx.credentials.play.services.auth
-    implementation libs.googleid
     testImplementation libs.junit
 }
