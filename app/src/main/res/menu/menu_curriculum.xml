@@ -4,6 +4,6 @@
     <item
         android:id="@+id/action_edit_credits"
         android:icon="@drawable/ic_edit"
-        android:title="Sửa tổng tín chỉ chương trình"
+        android:title="@string/edit_program_credits"
         app:showAsAction="always" />
 </menu>

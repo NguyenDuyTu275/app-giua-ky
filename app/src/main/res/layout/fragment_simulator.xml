@@ -8,7 +8,7 @@
     <com.google.android.material.appbar.MaterialToolbar
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        app:title="Kế hoạch học tập" />
+        app:title="@string/title_planner" />
 
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/tabs"
@@ -19,17 +19,17 @@
         <com.google.android.material.tabs.TabItem
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Mục tiêu GPA" />
+            android:text="@string/tab_target" />
 
         <com.google.android.material.tabs.TabItem
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Cứu môn" />
+            android:text="@string/tab_rescue" />
 
         <com.google.android.material.tabs.TabItem
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Học cải thiện" />
+            android:text="@string/tab_improve" />
     </com.google.android.material.tabs.TabLayout>
 
     <androidx.core.widget.NestedScrollView
@@ -63,7 +63,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Hiện tại"
+                            android:text="@string/current"
                             android:textAppearance="?attr/textAppearanceTitleMedium" />
 
                         <TextView
@@ -88,7 +88,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Mục tiêu"
+                            android:text="@string/target"
                             android:textAppearance="?attr/textAppearanceTitleMedium" />
 
                         <HorizontalScrollView
@@ -105,11 +105,11 @@
 
                         <com.google.android.material.textfield.TextInputLayout
                             android:id="@+id/target_input_layout"
-                            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                            style="@style/Widget.GpaPlanner.TextInput"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="8dp"
-                            android:hint="GPA tích lũy mong muốn (hệ 4)">
+                            android:hint="@string/target_gpa_hint">
 
                             <com.google.android.material.textfield.TextInputEditText
                                 android:id="@+id/target_input"
@@ -121,11 +121,11 @@
 
                         <com.google.android.material.textfield.TextInputLayout
                             android:id="@+id/credits_input_layout"
-                            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                            style="@style/Widget.GpaPlanner.TextInput"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="8dp"
-                            android:hint="Số tín chỉ sẽ học thêm">
+                            android:hint="@string/planned_credits_hint">
 
                             <com.google.android.material.textfield.TextInputEditText
                                 android:id="@+id/credits_input"
@@ -146,7 +146,7 @@
                     android:orientation="vertical" />
             </LinearLayout>
 
-            <!-- ============ Cứu môn ============ -->
+            <!-- ============ Điểm cần đạt ============ -->
             <LinearLayout
                 android:id="@+id/section_rescue"
                 android:layout_width="match_parent"
@@ -158,14 +158,14 @@
                     android:id="@+id/rescue_empty"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Không có môn nào đang học. Thêm môn chưa đủ điểm thành phần trong Bảng điểm để tính."
+                    android:text="@string/rescue_empty"
                     android:visibility="gone" />
 
                 <TextView
                     android:id="@+id/rescue_label"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Chọn môn đang học"
+                    android:text="@string/rescue_choose"
                     android:textAppearance="?attr/textAppearanceTitleSmall" />
 
                 <HorizontalScrollView

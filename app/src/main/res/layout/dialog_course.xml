@@ -12,10 +12,10 @@
         android:paddingTop="8dp">
 
         <com.google.android.material.textfield.TextInputLayout
-            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            style="@style/Widget.GpaPlanner.TextInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Mã môn">
+            android:hint="@string/course_code_hint">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/code"
@@ -26,11 +26,11 @@
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
-            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            style="@style/Widget.GpaPlanner.TextInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:hint="Tên môn">
+            android:hint="@string/course_name_hint">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/name"
@@ -47,11 +47,11 @@
             android:gravity="center_vertical">
 
             <com.google.android.material.textfield.TextInputLayout
-                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                style="@style/Widget.GpaPlanner.TextInput"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:hint="Số tín chỉ">
+                android:hint="@string/credits_hint">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/credits"
@@ -66,14 +66,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="12dp"
-                android:text="Tính GPA" />
+                android:text="@string/count_in_gpa" />
         </LinearLayout>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:text="Điểm thành phần (để trống nếu chưa có điểm)"
+            android:text="@string/components_title"
             android:textAppearance="?attr/textAppearanceTitleSmall" />
 
         <LinearLayout
@@ -87,7 +87,7 @@
             style="@style/Widget.Material3.Button.TextButton.Icon"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Thêm thành phần"
+            android:text="@string/add_component"
             app:icon="@drawable/ic_add"
             xmlns:app="http://schemas.android.com/apk/res-auto" />
 
@@ -110,7 +110,7 @@
             style="@style/Widget.Material3.Button.TextButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Xóa môn học này"
+            android:text="@string/delete_course"
             android:textColor="?attr/colorError"
             android:visibility="gone" />
     </LinearLayout>

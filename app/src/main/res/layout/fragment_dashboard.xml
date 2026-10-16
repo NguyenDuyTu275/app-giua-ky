@@ -6,9 +6,10 @@
     android:orientation="vertical">
 
     <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        app:title="Tổng quan học tập" />
+        app:title="@string/title_dashboard" />
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
@@ -82,20 +83,20 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="8dp"
-                        android:text="GPA theo học kỳ"
+                        android:text="@string/chart_line_title"
                         android:textAppearance="?attr/textAppearanceTitleMedium" />
 
                     <TextView
                         android:id="@+id/line_empty"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Chưa có học kỳ nào có điểm."
+                        android:text="@string/chart_line_empty"
                         android:visibility="gone" />
 
                     <com.appgiuaky.gpaplanner.components.dashboard.LineChartView
                         android:id="@+id/line_chart"
                         android:layout_width="match_parent"
-                        android:layout_height="200dp" />
+                        android:layout_height="220dp" />
 
                     <LinearLayout
                         android:id="@+id/line_legend"
@@ -121,14 +122,14 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="8dp"
-                        android:text="Phân bố điểm chữ"
+                        android:text="@string/chart_pie_title"
                         android:textAppearance="?attr/textAppearanceTitleMedium" />
 
                     <TextView
                         android:id="@+id/pie_empty"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Chưa có môn nào có điểm."
+                        android:text="@string/chart_pie_empty"
                         android:visibility="gone" />
 
                     <LinearLayout
@@ -139,8 +140,8 @@
 
                         <com.appgiuaky.gpaplanner.components.dashboard.PieChartView
                             android:id="@+id/pie_chart"
-                            android:layout_width="140dp"
-                            android:layout_height="140dp" />
+                            android:layout_width="150dp"
+                            android:layout_height="150dp" />
 
                         <LinearLayout
                             android:id="@+id/pie_legend"

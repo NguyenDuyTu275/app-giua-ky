@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Be Vietnam Pro (SIL OFL 1.1, xem licenses/BeVietnamPro-OFL.txt): đủ dấu tiếng Việt, khác với Outfit.
+    Thuộc tính android: cho Android 8+, app: cho Android 7 (minSdk 24), nên cần cả hai.
+-->
+<font-family xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:ignore="UnusedAttribute">
+    <font
+        android:font="@font/be_vietnam_pro_regular"
+        android:fontStyle="normal"
+        android:fontWeight="400"
+        app:font="@font/be_vietnam_pro_regular"
+        app:fontStyle="normal"
+        app:fontWeight="400" />
+    <font
+        android:font="@font/be_vietnam_pro_bold"
+        android:fontStyle="normal"
+        android:fontWeight="700"
+        app:font="@font/be_vietnam_pro_bold"
+        app:fontStyle="normal"
+        app:fontWeight="700" />
+</font-family>

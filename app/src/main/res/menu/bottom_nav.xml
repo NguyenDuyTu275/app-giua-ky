@@ -3,21 +3,21 @@
     <item
         android:id="@+id/nav_dashboard"
         android:icon="@drawable/ic_home"
-        android:title="Tổng quan" />
+        android:title="@string/nav_dashboard" />
     <item
         android:id="@+id/nav_gradebook"
         android:icon="@drawable/ic_list"
-        android:title="Bảng điểm" />
+        android:title="@string/title_gradebook" />
     <item
         android:id="@+id/nav_simulator"
         android:icon="@drawable/ic_star"
-        android:title="Kế hoạch" />
+        android:title="@string/nav_planner" />
     <item
         android:id="@+id/nav_curriculum"
         android:icon="@drawable/ic_date_range"
-        android:title="Chương trình" />
+        android:title="@string/nav_curriculum" />
     <item
         android:id="@+id/nav_advisor"
         android:icon="@drawable/ic_chat"
-        android:title="Cố vấn AI" />
+        android:title="@string/nav_advisor" />
 </menu>

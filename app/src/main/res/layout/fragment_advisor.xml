@@ -9,7 +9,7 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        app:title="Cố vấn học vụ AI" />
+        app:title="@string/title_advisor" />
 
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/tabs"
@@ -20,12 +20,12 @@
         <com.google.android.material.tabs.TabItem
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Hỏi đáp" />
+            android:text="@string/tab_chat" />
 
         <com.google.android.material.tabs.TabItem
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Lịch ôn thi" />
+            android:text="@string/study_plan" />
     </com.google.android.material.tabs.TabLayout>
 
     <FrameLayout
@@ -50,7 +50,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Chưa có Gemini API key"
+                    android:text="@string/missing_key_title"
                     android:textAppearance="?attr/textAppearanceTitleMedium" />
 
                 <TextView
@@ -64,7 +64,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="Nhập API key" />
+                    android:text="@string/enter_api_key" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -107,11 +107,11 @@
                 android:paddingBottom="8dp">
 
                 <com.google.android.material.textfield.TextInputLayout
-                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    style="@style/Widget.GpaPlanner.TextInput"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:hint="Nhập câu hỏi...">
+                    android:hint="@string/chat_hint">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/chat_input"
@@ -126,7 +126,7 @@
                     android:layout_width="48dp"
                     android:layout_height="48dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
-                    android:contentDescription="Gửi"
+                    android:contentDescription="@string/send"
                     android:src="@drawable/ic_send"
                     app:tint="?attr/colorPrimary" />
             </LinearLayout>
@@ -148,7 +148,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Chọn ngày thi cho các môn cần ôn. AI sẽ xếp lịch theo từng ngày, ưu tiên môn thi sớm và môn cần điểm cao."
+                    android:text="@string/plan_intro"
                     android:textColor="?attr/colorOnSurfaceVariant" />
 
                 <TextView
@@ -156,7 +156,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:text="Không có môn nào đang học. Thêm môn chưa đủ điểm thành phần trong Bảng điểm."
+                    android:text="@string/plan_empty"
                     android:visibility="gone" />
 
                 <com.google.android.material.card.MaterialCardView
@@ -227,7 +227,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Lịch ôn thi"
+                            android:text="@string/study_plan"
                             android:textAppearance="?attr/textAppearanceTitleMedium" />
 
                         <TextView

@@ -9,7 +9,8 @@
 .externalNativeBuild
 .cxx
 local.properties
-Claude.md
+# Luật làm việc cho Claude Code, chỉ dùng trên máy cá nhân
+CLAUDE.md
 # Khóa ký bản release: không bao giờ đẩy lên git
 *.jks
 keystore.properties

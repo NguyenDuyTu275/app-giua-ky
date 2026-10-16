@@ -14,11 +14,11 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.widget.NestedScrollView;
-import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.appgiuaky.gpaplanner.AppViewModel;
 import com.appgiuaky.gpaplanner.R;
+import com.appgiuaky.gpaplanner.components.TabFragment;
 import com.appgiuaky.gpaplanner.components.Ui;
 import com.appgiuaky.gpaplanner.services.GeminiService;
 import com.appgiuaky.gpaplanner.services.GeminiService.ChatMessage;
@@ -37,16 +37,10 @@ import com.google.android.material.slider.Slider;
 import com.google.android.material.tabs.TabLayout;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /** Chức năng 7 & 8: cố vấn học vụ AI (hỏi đáp dựa trên bảng điểm) và lập lịch ôn thi bằng Gemini. */
-public class AIAdvisorFragment extends Fragment {
-
-    private static final List<String> SUGGESTIONS = Arrays.asList(
-            "Các kỳ sau em cần đạt bao nhiêu điểm để tốt nghiệp loại Giỏi?",
-            "Nên học cải thiện môn nào để tăng GPA nhiều nhất?",
-            "Kỳ này em cần chú ý môn nào nhất?");
+public class AIAdvisorFragment extends TabFragment {
 
     private AppViewModel vm;
     private View view;
@@ -55,6 +49,13 @@ public class AIAdvisorFragment extends Fragment {
     private LinearLayout chatList;
     private NestedScrollView chatScroll;
     private Slider hours;
+    /** Number of messages already drawn as bubbles in chatList, so only new ones are added. */
+    private int shownMessages;
+    /** The "Đang trả lời..." row at the end of chatList, or null. */
+    private View typingRow;
+    /** Bong bóng câu trả lời đang về (streaming) ở cuối chatList, hoặc null. */
+    private View streamingRow;
+    private TextView streamingText;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle state) {
@@ -69,6 +70,10 @@ public class AIAdvisorFragment extends Fragment {
         chatList = view.findViewById(R.id.chat_list);
         chatScroll = view.findViewById(R.id.chat_scroll);
         hours = view.findViewById(R.id.hours);
+        shownMessages = 0;
+        typingRow = null;
+        streamingRow = null;
+        streamingText = null;
 
         MaterialToolbar toolbar = view.findViewById(R.id.toolbar);
         toolbar.inflateMenu(R.menu.menu_advisor);
@@ -76,8 +81,7 @@ public class AIAdvisorFragment extends Fragment {
             showKeyDialog();
             return true;
         });
-        ((TextView) view.findViewById(R.id.missing_key_text)).setText("Cố vấn AI dùng Google Gemini (" + GeminiService.MODEL
-                + "). Tạo key miễn phí tại aistudio.google.com/apikey rồi nhập vào đây. Key chỉ được lưu trên máy này.");
+        ((TextView) view.findViewById(R.id.missing_key_text)).setText(getString(R.string.missing_key_text, GeminiService.MODEL));
         view.findViewById(R.id.enter_key).setOnClickListener(v -> showKeyDialog());
 
         ((TabLayout) view.findViewById(R.id.tabs)).addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
@@ -85,6 +89,7 @@ public class AIAdvisorFragment extends Fragment {
             public void onTabSelected(TabLayout.Tab tab) {
                 section = tab.getPosition();
                 updatePanels();
+                Ui.fadeIn(view.findViewById(section == 0 ? R.id.chat_panel : R.id.plan_panel));
             }
 
             @Override
@@ -100,6 +105,7 @@ public class AIAdvisorFragment extends Fragment {
         view.findViewById(R.id.send).setOnClickListener(v -> send());
         chatInput.addTextChangedListener(new Ui.SimpleWatcher(this::updateSendButton));
         vm.getChat().observe(getViewLifecycleOwner(), messages -> renderChat());
+        vm.getChatPartial().observe(getViewLifecycleOwner(), this::renderPartial);
         vm.getChatLoading().observe(getViewLifecycleOwner(), loading -> {
             renderChat();
             updateSendButton();
@@ -122,13 +128,14 @@ public class AIAdvisorFragment extends Fragment {
         vm.getStudyPlan().observe(getViewLifecycleOwner(), plan -> renderPlanState());
 
         vm.getApiKey().observe(getViewLifecycleOwner(), key -> updatePanels());
-        vm.getData().observe(getViewLifecycleOwner(), data -> renderExams());
+        observeWhenVisible(vm.getData(), data -> renderExams());
     }
 
     private void showKeyDialog() {
-        Ui.inputDialog(requireContext(), "Gemini API key", "API key", vm.getApiKey().getValue(),
+        Ui.inputDialog(requireContext(), getString(R.string.api_key_title), getString(R.string.api_key_hint),
+                vm.getApiKey().getValue(),
                 InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS,
-                "Tạo key tại aistudio.google.com/apikey. Để trống rồi Lưu để xóa key.",
+                getString(R.string.api_key_helper),
                 s -> true, vm::saveApiKey);
     }
 
@@ -162,42 +169,101 @@ public class AIAdvisorFragment extends Fragment {
     }
 
     private void renderChat() {
-        chatList.removeAllViews();
         List<ChatMessage> messages = vm.getChat().getValue();
         if (messages == null || messages.isEmpty()) {
-            Ui.add(chatList, Ui.text(requireContext(),
-                    "Hỏi cố vấn về bảng điểm, mục tiêu GPA, môn nên học cải thiện... Cố vấn đọc được toàn bộ bảng điểm của bạn. Ví dụ:",
-                    com.google.android.material.R.attr.textAppearanceBodyMedium,
-                    com.google.android.material.R.attr.colorOnSurfaceVariant), 0);
-            for (String s : SUGGESTIONS) {
-                MaterialButton chip = new MaterialButton(requireContext(), null,
-                        com.google.android.material.R.attr.materialButtonOutlinedStyle);
-                chip.setText(s);
-                chip.setAllCaps(false);
-                chip.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
-                chip.setOnClickListener(v -> vm.sendChat(s));
-                Ui.add(chatList, chip, 8);
-            }
+            showSuggestions();
             return;
         }
-        for (ChatMessage m : messages) Ui.add(chatList, bubble(m), 8);
-        if (chatLoading()) {
-            LinearLayout row = new LinearLayout(requireContext());
-            row.setGravity(Gravity.CENTER_VERTICAL);
-            CircularProgressIndicator progress = new CircularProgressIndicator(requireContext());
-            progress.setIndeterminate(true);
-            progress.setIndicatorSize(Ui.dp(requireContext(), 16));
-            progress.setTrackThickness(Ui.dp(requireContext(), 2));
-            row.addView(progress);
-            TextView text = Ui.text(requireContext(), "Đang trả lời...",
-                    com.google.android.material.R.attr.textAppearanceBodyMedium,
-                    com.google.android.material.R.attr.colorOnSurfaceVariant);
-            text.setPadding(Ui.dp(requireContext(), 8), 0, 0, 0);
-            row.addView(text);
-            Ui.add(chatList, row, 8);
+        // Rebuild only when the intro was showing or a message was removed (failed send); otherwise append
+        if (shownMessages == 0 || messages.size() < shownMessages) {
+            chatList.removeAllViews();
+            shownMessages = 0;
+            typingRow = null;
+            streamingRow = null;
+            streamingText = null;
         }
-        // Cuộn xuống tin nhắn mới nhất
+        if (typingRow != null) {
+            chatList.removeView(typingRow);
+            typingRow = null;
+        }
+        // Câu trả lời hoàn chỉnh thay cho bong bóng đang về, nên không cần hiện mờ dần lần nữa
+        boolean replacesStreaming = streamingRow != null && messages.size() > shownMessages;
+        if (replacesStreaming) removeStreamingRow();
+        for (int i = shownMessages; i < messages.size(); i++) {
+            View bubble = Ui.add(chatList, bubble(messages.get(i)), 8);
+            if (!replacesStreaming) Ui.fadeIn(bubble);
+        }
+        shownMessages = messages.size();
+        if (chatLoading() && streamingRow == null) typingRow = Ui.add(chatList, typingRow(), 8);
+        scrollToBottom();
+    }
+
+    /** Câu trả lời đang về: thay dòng "Đang trả lời..." bằng bong bóng và cập nhật chữ mỗi khi có thêm. */
+    private void renderPartial(String text) {
+        if (text == null) {
+            // Xong hoặc lỗi: renderChat đã hiện câu trả lời hoàn chỉnh hoặc dựng lại danh sách
+            if (streamingRow != null) removeStreamingRow();
+            return;
+        }
+        if (typingRow != null) {
+            chatList.removeView(typingRow);
+            typingRow = null;
+        }
+        if (streamingRow == null) {
+            streamingRow = Ui.add(chatList, bubble(new ChatMessage(false, text)), 8);
+            streamingText = (TextView) ((ViewGroup) streamingRow).getChildAt(0);
+            Ui.fadeIn(streamingRow);
+        } else {
+            streamingText.setText(text);
+        }
+        scrollToBottom();
+    }
+
+    private void removeStreamingRow() {
+        chatList.removeView(streamingRow);
+        streamingRow = null;
+        streamingText = null;
+    }
+
+    /** Cuộn xuống tin nhắn mới nhất. */
+    private void scrollToBottom() {
         chatScroll.post(() -> chatScroll.smoothScrollTo(0, chatList.getHeight()));
+    }
+
+    private void showSuggestions() {
+        chatList.removeAllViews();
+        shownMessages = 0;
+        typingRow = null;
+        streamingRow = null;
+        streamingText = null;
+        Ui.add(chatList, Ui.text(requireContext(), getString(R.string.chat_intro),
+                com.google.android.material.R.attr.textAppearanceBodyMedium,
+                com.google.android.material.R.attr.colorOnSurfaceVariant), 0);
+        for (String s : getResources().getStringArray(R.array.advisor_suggestions)) {
+            MaterialButton chip = new MaterialButton(requireContext(), null,
+                    com.google.android.material.R.attr.materialButtonOutlinedStyle);
+            chip.setText(s);
+            chip.setAllCaps(false);
+            chip.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
+            chip.setOnClickListener(v -> vm.sendChat(s));
+            Ui.add(chatList, chip, 8);
+        }
+    }
+
+    private View typingRow() {
+        LinearLayout row = new LinearLayout(requireContext());
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        CircularProgressIndicator progress = new CircularProgressIndicator(requireContext());
+        progress.setIndeterminate(true);
+        progress.setIndicatorSize(Ui.dp(requireContext(), 16));
+        progress.setTrackThickness(Ui.dp(requireContext(), 2));
+        row.addView(progress);
+        TextView text = Ui.text(requireContext(), getString(R.string.chat_typing),
+                com.google.android.material.R.attr.textAppearanceBodyMedium,
+                com.google.android.material.R.attr.colorOnSurfaceVariant);
+        text.setPadding(Ui.dp(requireContext(), 8), 0, 0, 0);
+        row.addView(text);
+        return row;
     }
 
     /** Bong bóng tin nhắn: của người dùng nằm bên phải, của cố vấn nằm bên trái. */
@@ -240,8 +306,7 @@ public class AIAdvisorFragment extends Fragment {
     }
 
     private void updateHoursLabel() {
-        ((TextView) view.findViewById(R.id.hours_label))
-                .setText("Thời gian ôn mỗi ngày: " + (int) hours.getValue() + " giờ");
+        ((TextView) view.findViewById(R.id.hours_label)).setText(getString(R.string.hours_label, (int) hours.getValue()));
     }
 
     private void renderExams() {
@@ -257,10 +322,11 @@ public class AIAdvisorFragment extends Fragment {
             if (i > 0) list.addView(new MaterialDivider(requireContext()));
             View row = inflater.inflate(R.layout.item_exam, list, false);
             ((TextView) row.findViewById(R.id.exam_name)).setText(course.name);
-            ((TextView) row.findViewById(R.id.exam_meta)).setText(
-                    course.code + " • " + course.credits + " TC • " + GpaCalculator.status(course).label);
+            ((TextView) row.findViewById(R.id.exam_meta)).setText(getString(R.string.course_meta_status,
+                    course.code, course.credits, GpaCalculator.status(course).label));
             MaterialButton dateButton = row.findViewById(R.id.exam_date);
-            dateButton.setText(date == null ? "Ngày thi" : GeminiService.formatDate(date));
+            if (date == null) dateButton.setText(R.string.exam_date);
+            else dateButton.setText(GeminiService.formatDate(date));
             dateButton.setIconResource(date == null ? R.drawable.ic_date_range : 0);
             dateButton.setOnClickListener(v -> pickDate(course, date));
             View clear = row.findViewById(R.id.exam_clear);
@@ -277,7 +343,7 @@ public class AIAdvisorFragment extends Fragment {
     /** Chọn ngày thi; chỉ cho chọn từ hôm nay trở đi. */
     private void pickDate(Course course, Long current) {
         MaterialDatePicker<Long> picker = MaterialDatePicker.Builder.datePicker()
-                .setTitleText("Ngày thi " + course.name)
+                .setTitleText(getString(R.string.exam_date_title, course.name))
                 .setSelection(current != null ? current : AppViewModel.todayUtcMillis())
                 .setCalendarConstraints(new CalendarConstraints.Builder()
                         .setValidator(DateValidatorPointForward.from(AppViewModel.todayUtcMillis()))
@@ -294,7 +360,7 @@ public class AIAdvisorFragment extends Fragment {
         boolean loading = Boolean.TRUE.equals(vm.getStudyPlanLoading().getValue());
         int count = exams().size();
         MaterialButton generate = view.findViewById(R.id.generate);
-        generate.setText(loading ? "Đang lập lịch..." : "Lập lịch ôn thi (" + count + " môn)");
+        generate.setText(loading ? getString(R.string.plan_generating) : getString(R.string.plan_generate, count));
         generate.setEnabled(count > 0 && !loading);
         view.findViewById(R.id.plan_progress).setVisibility(loading ? View.VISIBLE : View.GONE);
 

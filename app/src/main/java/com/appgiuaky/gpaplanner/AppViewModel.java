@@ -3,28 +3,30 @@ package com.appgiuaky.gpaplanner;
 import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Handler;
+import android.os.Looper;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import com.appgiuaky.gpaplanner.services.DataFile;
 import com.appgiuaky.gpaplanner.services.GeminiService;
 import com.appgiuaky.gpaplanner.services.GeminiService.ChatMessage;
 import com.appgiuaky.gpaplanner.types.AcademicData;
 import com.appgiuaky.gpaplanner.types.Course;
+import com.appgiuaky.gpaplanner.types.LetterGrade;
 import com.appgiuaky.gpaplanner.types.Semester;
 import com.appgiuaky.gpaplanner.utils.MockData;
 
 import org.json.JSONException;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
+import java.net.ConnectException;
+import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -32,8 +34,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 /**
  * Giữ dữ liệu bảng điểm (lưu file JSON trong máy), API key và trạng thái các tác vụ AI.
@@ -42,31 +47,58 @@ import java.util.concurrent.Executors;
 public class AppViewModel extends AndroidViewModel {
 
     private static final String KEY_API = "gemini_api_key";
+    /** Keeps each advisor request small; older turns matter little once the transcript is resent. */
+    private static final int MAX_HISTORY_MESSAGES = 20;
+    private static final long FIRST_TEXT_TIMEOUT_MS = GeminiService.FIRST_TEXT_TIMEOUT_MS;
+    private static final String NO_RESPONSE_MESSAGE = "Gemini chưa phản hồi sau " + FIRST_TEXT_TIMEOUT_MS / 1000
+            + " giây. Có thể máy chủ đang quá tải hoặc mạng yếu, thử lại sau ít phút.";
+    private static final String NETWORK_MESSAGE = "Không kết nối được tới Gemini. Kiểm tra kết nối mạng rồi thử lại.";
 
-    private final File file;
+    private final DataFile file;
     private final SharedPreferences prefs;
-    /** Luồng nền cho các lệnh gọi mạng tới Gemini. */
-    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    /** Separate from the network thread so a slow Gemini call never delays saving. */
+    private final ExecutorService ioExecutor = Executors.newSingleThreadExecutor();
+    /**
+     * Luồng nền cho các lệnh gọi mạng tới Gemini. Mỗi lần gọi một luồng riêng: lần gọi bị treo vì mạng hỏng
+     * không làm lần gửi sau phải xếp hàng chờ nó.
+     */
+    private final ExecutorService networkExecutor = Executors.newCachedThreadPool();
+    private final Handler main = new Handler(Looper.getMainLooper());
+    /** Số thứ tự lần gọi Gemini đang chờ của hỏi đáp / lịch ôn thi (xem callGemini). */
+    private final AtomicInteger chatCall = new AtomicInteger();
+    private final AtomicInteger planCall = new AtomicInteger();
 
     private final MutableLiveData<AcademicData> data = new MutableLiveData<>();
+    /** Storage problem to show the user once; cleared after it is shown. */
+    private final MutableLiveData<String> storageNotice = new MutableLiveData<>();
     private final MutableLiveData<String> apiKey = new MutableLiveData<>();
 
     private final List<ChatMessage> chatMessages = new ArrayList<>();
     private final MutableLiveData<List<ChatMessage>> chat = new MutableLiveData<>(Collections.<ChatMessage>emptyList());
     private final MutableLiveData<Boolean> chatLoading = new MutableLiveData<>(false);
     private final MutableLiveData<String> chatError = new MutableLiveData<>();
+    /** Phần câu trả lời đang về (streaming); null khi không có câu trả lời nào đang viết dở. */
+    private final MutableLiveData<String> chatPartial = new MutableLiveData<>();
     /** Câu hỏi gửi lỗi, được trả lại ô nhập để người dùng gửi lại. */
     private volatile String failedInput;
 
     /** Ngày thi người dùng chọn cho từng môn (id môn -> mốc 0h UTC của ngày thi). */
     public final Map<String, Long> examDates = new HashMap<>();
+
+    // Planner tab state lives here because the Fragment is recreated on rotation / theme change
+    /** Điểm dự kiến khi học cải thiện: id môn -> điểm chữ. */
+    public final Map<String, LetterGrade> improvements = new HashMap<>();
+    public String rescueCourseId;
+    public boolean plannerInputsInitialized;
+    public int plannerSection;
+
     private final MutableLiveData<String> studyPlan = new MutableLiveData<>();
     private final MutableLiveData<Boolean> studyPlanLoading = new MutableLiveData<>(false);
     private final MutableLiveData<String> studyPlanError = new MutableLiveData<>();
 
     public AppViewModel(@NonNull Application app) {
         super(app);
-        file = new File(app.getFilesDir(), "academic.json");
+        file = new DataFile(new File(app.getFilesDir(), "academic.json"));
         prefs = app.getSharedPreferences("settings", Context.MODE_PRIVATE);
         data.setValue(load());
         apiKey.setValue(prefs.getString(KEY_API, ""));
@@ -82,19 +114,26 @@ public class AppViewModel extends AndroidViewModel {
         return data.getValue();
     }
 
+    public LiveData<String> getStorageNotice() {
+        return storageNotice;
+    }
+
+    public void clearStorageNotice() {
+        storageNotice.setValue(null);
+    }
+
     private AcademicData load() {
-        if (!file.exists()) return MockData.create();
-        try (InputStream in = new FileInputStream(file)) {
-            byte[] bytes = new byte[(int) file.length()];
-            int read = 0;
-            while (read < bytes.length) {
-                int n = in.read(bytes, read, bytes.length - read);
-                if (n < 0) break;
-                read += n;
-            }
-            return AcademicData.fromJson(new String(bytes, 0, read, StandardCharsets.UTF_8));
+        try {
+            String json = file.read();
+            return json == null ? MockData.create() : AcademicData.fromJson(json);
         } catch (IOException | JSONException e) {
-            // File hỏng: bắt đầu lại với dữ liệu mẫu thay vì làm app không mở được
+            // Keep the broken file for recovery instead of overwriting it with sample data on the next save
+            try {
+                file.quarantine();
+                storageNotice.setValue("File dữ liệu bị lỗi nên đã được sao lưu, app dùng dữ liệu mẫu");
+            } catch (IOException moveFailed) {
+                storageNotice.setValue("File dữ liệu bị lỗi và không sao lưu được: " + moveFailed.getMessage());
+            }
             return MockData.create();
         }
     }
@@ -102,13 +141,19 @@ public class AppViewModel extends AndroidViewModel {
     /** Ghi dữ liệu hiện tại ra file và báo cho các màn hình vẽ lại. */
     private void save() {
         AcademicData d = current();
-        executor.execute(() -> {
-            try (OutputStream out = new FileOutputStream(file)) {
-                out.write(d.toJson().getBytes(StandardCharsets.UTF_8));
-                data.postValue(d);
-            } catch (IOException | JSONException e) {
-                // Log or handle error gracefully in background thread
-                e.printStackTrace();
+        // Serialize on the main thread: the background thread must never read lists the UI is mutating
+        String json;
+        try {
+            json = d.toJson();
+        } catch (JSONException e) {
+            throw new IllegalStateException("Không chuyển được bảng điểm sang JSON", e);
+        }
+        data.setValue(d);
+        ioExecutor.execute(() -> {
+            try {
+                file.write(json);
+            } catch (IOException e) {
+                storageNotice.postValue("Không lưu được dữ liệu: " + e.getMessage());
             }
         });
     }
@@ -158,6 +203,21 @@ public class AppViewModel extends AndroidViewModel {
         save();
     }
 
+    /**
+     * Đưa môn vừa xóa trở lại vị trí cũ (nút Hoàn tác).
+     * Returns false if its semester no longer exists, so there is nowhere to restore it.
+     */
+    public boolean restoreCourse(String semesterId, int index, Course course) {
+        for (Semester s : current().semesters) {
+            if (s.id.equals(semesterId)) {
+                s.courses.add(Math.min(Math.max(index, 0), s.courses.size()), course);
+                save();
+                return true;
+            }
+        }
+        return false;
+    }
+
     public void setProgramCredits(int credits) {
         current().totalProgramCredits = credits;
         save();
@@ -195,6 +255,10 @@ public class AppViewModel extends AndroidViewModel {
         return chatError;
     }
 
+    public LiveData<String> getChatPartial() {
+        return chatPartial;
+    }
+
     /** Lấy (một lần) câu hỏi vừa gửi lỗi để đưa lại vào ô nhập. */
     public String takeFailedInput() {
         String s = failedInput;
@@ -210,28 +274,69 @@ public class AppViewModel extends AndroidViewModel {
         chat.setValue(new ArrayList<>(chatMessages));
         chatLoading.setValue(true);
 
-        // Chuẩn bị dữ liệu trên luồng chính, chỉ gọi mạng ở luồng nền
-        final String key = apiKey.getValue();
-        final String prompt = GeminiService.advisorPrompt(current());
-        final List<ChatMessage> history = new ArrayList<>(chatMessages);
-        executor.execute(() -> {
-            try {
-                String reply = GeminiService.generate(key, prompt, history);
-                synchronized (chatMessages) {
+        callGemini(chatCall, GeminiService.advisorPrompt(current()),
+                GeminiService.recentHistory(chatMessages, MAX_HISTORY_MESSAGES),
+                chatPartial::setValue,
+                reply -> {
                     chatMessages.add(new ChatMessage(false, reply));
-                    chat.postValue(new ArrayList<>(chatMessages));
-                }
-            } catch (Exception e) {
-                synchronized (chatMessages) {
+                    chat.setValue(new ArrayList<>(chatMessages));
+                    chatPartial.setValue(null);
+                    chatLoading.setValue(false);
+                },
+                error -> {
                     chatMessages.remove(chatMessages.size() - 1);
-                    chat.postValue(new ArrayList<>(chatMessages));
-                }
-                failedInput = text;
-                chatError.postValue(e.getMessage() != null ? e.getMessage() : "Không gọi được Gemini");
-            } finally {
-                chatLoading.postValue(false);
+                    chat.setValue(new ArrayList<>(chatMessages));
+                    failedInput = text;
+                    chatError.setValue(error);
+                    chatPartial.setValue(null);
+                    chatLoading.setValue(false);
+                });
+    }
+
+    /**
+     * Gọi Gemini trên luồng nền; [onPartial], [onDone], [onError] luôn chạy trên luồng chính.
+     * Quá FIRST_TEXT_TIMEOUT_MS mà chưa có chữ nào thì báo lỗi, vì khi mạng hỏng, bước tìm địa chỉ máy chủ (DNS)
+     * có thể treo rất lâu mà thời gian chờ của HttpURLConnection không tính tới.
+     * Mỗi lần gọi có một số thứ tự trong [current]: lần gọi đã kết thúc hoặc hết giờ thì kết quả về muộn bị bỏ qua.
+     */
+    private void callGemini(AtomicInteger current, String systemPrompt, List<ChatMessage> history,
+                            Consumer<String> onPartial, Consumer<String> onDone, Consumer<String> onError) {
+        final String key = apiKey.getValue();
+        final int id = current.incrementAndGet();
+        final Runnable timeout = () -> finish(current, id, null, () -> onError.accept(NO_RESPONSE_MESSAGE));
+        main.postDelayed(timeout, FIRST_TEXT_TIMEOUT_MS);
+        networkExecutor.execute(() -> {
+            try {
+                String result = GeminiService.generate(key, systemPrompt, history, partial -> {
+                    // Lần gọi đã hết giờ: ngừng đọc tiếp thay vì tải nốt câu trả lời không còn ai chờ
+                    if (current.get() != id) throw new CancellationException();
+                    main.post(() -> {
+                        if (current.get() != id) return;
+                        main.removeCallbacks(timeout);
+                        onPartial.accept(partial);
+                    });
+                });
+                main.post(() -> finish(current, id, timeout, () -> onDone.accept(result)));
+            } catch (Exception e) {
+                String message = errorMessage(e);
+                main.post(() -> finish(current, id, timeout, () -> onError.accept(message)));
             }
         });
+    }
+
+    /** Kết thúc lần gọi [id] nếu nó vẫn là lần gọi đang chờ (chạy trên luồng chính). */
+    private void finish(AtomicInteger current, int id, Runnable timeout, Runnable action) {
+        if (current.get() != id) return;
+        current.incrementAndGet();
+        if (timeout != null) main.removeCallbacks(timeout);
+        action.run();
+    }
+
+    private static String errorMessage(Exception e) {
+        if (e instanceof UnknownHostException || e instanceof ConnectException || e instanceof SocketTimeoutException) {
+            return NETWORK_MESSAGE;
+        }
+        return e.getMessage() != null ? e.getMessage() : "Không gọi được Gemini";
     }
 
     // ------------------------------------------------------------ Lịch ôn thi
@@ -259,23 +364,30 @@ public class AppViewModel extends AndroidViewModel {
 
     public void generateStudyPlan(List<GeminiService.Exam> exams, int hoursPerDay) {
         studyPlanError.setValue(null);
+        // Xóa lịch cũ: lịch mới hiện dần ngay khi Gemini viết tới đâu
+        studyPlan.setValue(null);
         studyPlanLoading.setValue(true);
-        final String key = apiKey.getValue();
-        final String request = GeminiService.studyPlanRequest(exams, hoursPerDay, todayUtcMillis());
-        executor.execute(() -> {
-            try {
-                studyPlan.postValue(GeminiService.generate(key, GeminiService.STUDY_PLANNER_PROMPT,
-                        Collections.singletonList(new ChatMessage(true, request))));
-            } catch (Exception e) {
-                studyPlanError.postValue(e.getMessage() != null ? e.getMessage() : "Không gọi được Gemini");
-            } finally {
-                studyPlanLoading.postValue(false);
-            }
-        });
+        String request = GeminiService.studyPlanRequest(exams, hoursPerDay, todayUtcMillis());
+        callGemini(planCall, GeminiService.STUDY_PLANNER_PROMPT,
+                Collections.singletonList(new ChatMessage(true, request)),
+                studyPlan::setValue,
+                plan -> {
+                    studyPlan.setValue(plan);
+                    studyPlanLoading.setValue(false);
+                },
+                error -> {
+                    // Không để lại nửa lịch trông như đã xong
+                    studyPlan.setValue(null);
+                    studyPlanError.setValue(error);
+                    studyPlanLoading.setValue(false);
+                });
     }
 
     @Override
     protected void onCleared() {
-        executor.shutdownNow();
+        main.removeCallbacksAndMessages(null);
+        networkExecutor.shutdownNow();
+        // Let a pending write finish so the last edit is not lost
+        ioExecutor.shutdown();
     }
 }

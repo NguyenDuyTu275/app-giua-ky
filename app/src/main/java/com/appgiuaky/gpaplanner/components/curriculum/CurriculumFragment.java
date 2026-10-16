@@ -3,6 +3,8 @@ package com.appgiuaky.gpaplanner.components.curriculum;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.text.InputType;
+import android.transition.AutoTransition;
+import android.transition.TransitionManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,11 +15,13 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
+import androidx.annotation.StringRes;
+import androidx.core.view.ViewCompat;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.appgiuaky.gpaplanner.AppViewModel;
 import com.appgiuaky.gpaplanner.R;
+import com.appgiuaky.gpaplanner.components.TabFragment;
 import com.appgiuaky.gpaplanner.components.Ui;
 import com.appgiuaky.gpaplanner.types.AcademicData;
 import com.appgiuaky.gpaplanner.types.Course;
@@ -31,20 +35,25 @@ import java.util.HashSet;
 import java.util.Set;
 
 /** Chức năng 5: cây chương trình đào tạo theo học kỳ và tiến độ tích lũy tín chỉ. */
-public class CurriculumFragment extends Fragment {
+public class CurriculumFragment extends TabFragment {
+
+    private static final int MIN_PROGRAM_CREDITS = 1;
+    private static final int MAX_PROGRAM_CREDITS = 500;
+    private static final long EXPAND_MS = 220;
 
     /** Trạng thái của một môn trên cây chương trình. */
     private enum NodeState {
-        PASSED("Đã đạt"),
-        FAILED("Nợ môn"),
+        PASSED(R.string.node_passed),
+        FAILED(R.string.node_failed),
         /** Lần học đã được thay bằng một lần học lại/cải thiện có điểm cao hơn. */
-        REPLACED("Đã học lại"),
-        IN_PROGRESS("Đang học"),
-        PLANNED("Chưa học");
+        REPLACED(R.string.node_replaced),
+        IN_PROGRESS(R.string.node_in_progress),
+        PLANNED(R.string.node_planned);
 
-        final String label;
+        @StringRes
+        final int label;
 
-        NodeState(String label) {
+        NodeState(@StringRes int label) {
             this.label = label;
         }
     }
@@ -69,18 +78,25 @@ public class CurriculumFragment extends Fragment {
         MaterialToolbar toolbar = view.findViewById(R.id.toolbar);
         toolbar.inflateMenu(R.menu.menu_curriculum);
         toolbar.setOnMenuItemClickListener(item -> {
-            Ui.inputDialog(requireContext(), "Tổng tín chỉ chương trình", "Số tín chỉ",
+            Ui.inputDialog(requireContext(), getString(R.string.program_credits_title), getString(R.string.credits_hint),
                     String.valueOf(vm.current().totalProgramCredits), InputType.TYPE_CLASS_NUMBER,
-                    "Số tín chỉ cần tích lũy để tốt nghiệp (1 - 500)",
+                    getString(R.string.program_credits_helper, MIN_PROGRAM_CREDITS, MAX_PROGRAM_CREDITS),
                     s -> {
                         Integer n = Format.parseInt(s);
-                        return n != null && n >= 1 && n <= 500;
+                        return n != null && n >= MIN_PROGRAM_CREDITS && n <= MAX_PROGRAM_CREDITS;
                     },
                     s -> vm.setProgramCredits(Format.parseInt(s)));
             return true;
         });
 
-        vm.getData().observe(getViewLifecycleOwner(), this::render);
+        observeWhenVisible(vm.getData(), this::render);
+    }
+
+    /** Mỗi lần quay lại tab thì thanh tiến độ chạy lại từ trái sang. */
+    @Override
+    public void onHiddenChanged(boolean hidden) {
+        super.onHiddenChanged(hidden);
+        if (!hidden && view != null) Ui.growIn(view.findViewById(R.id.progress_bar));
     }
 
     private NodeState stateOf(Course c) {
@@ -119,11 +135,12 @@ public class CurriculumFragment extends Fragment {
         }
         int unscheduled = Math.max(0, data.totalProgramCredits - total.credits - inProgress - planned);
 
-        ((TextView) view.findViewById(R.id.progress_text)).setText(total.credits + "/" + data.totalProgramCredits
-                + " tín chỉ tích lũy (" + (total.credits * 100 / data.totalProgramCredits) + "%)"
-                + (failed > 0 ? " • Nợ " + failed + " môn" : ""));
+        int percent = GpaCalculator.progressPercent(total.credits, data.totalProgramCredits);
+        ((TextView) view.findViewById(R.id.progress_text)).setText(failed > 0
+                ? getString(R.string.progress_text_failed, total.credits, data.totalProgramCredits, percent, failed)
+                : getString(R.string.progress_text, total.credits, data.totalProgramCredits, percent));
 
-        String[] labels = {"Đã tích lũy", "Đang học", "Chưa học", "Chưa xếp kỳ"};
+        int[] labels = {R.string.segment_earned, R.string.node_in_progress, R.string.node_planned, R.string.segment_unscheduled};
         int[] credits = {total.credits, inProgress, planned, unscheduled};
         int[] colors = {
                 colorOf(NodeState.PASSED),
@@ -141,8 +158,10 @@ public class CurriculumFragment extends Fragment {
                 segment.setBackgroundColor(colors[i]);
                 bar.addView(segment, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, credits[i]));
             }
-            Ui.add(legend, Ui.legend(requireContext(), colors[i], labels[i] + ": " + credits[i] + " TC"), 4);
+            Ui.add(legend, Ui.legend(requireContext(), colors[i],
+                    getString(R.string.legend_credits, getString(labels[i]), credits[i])), 4);
         }
+        Ui.growIn(bar);
 
         view.findViewById(R.id.empty).setVisibility(data.semesters.isEmpty() ? View.VISIBLE : View.GONE);
         LinearLayout semesters = view.findViewById(R.id.semesters);
@@ -164,20 +183,26 @@ public class CurriculumFragment extends Fragment {
             if (GpaCalculator.status(c) == CourseStatus.COMPLETED) done++;
         }
         ((TextView) node.findViewById(R.id.tree_name)).setText(semester.name);
-        ((TextView) node.findViewById(R.id.tree_summary)).setText(credits + " TC • " + done + "/" + semester.courses.size()
-                + " môn có điểm" + (summary.credits > 0 ? " • GPA kỳ " + Format.fmt(summary.gpa4) : ""));
+        ((TextView) node.findViewById(R.id.tree_summary)).setText(summary.credits > 0
+                ? getString(R.string.tree_summary_gpa, credits, done, semester.courses.size(), Format.fmt(summary.gpa4))
+                : getString(R.string.tree_summary, credits, done, semester.courses.size()));
 
         LinearLayout courses = node.findViewById(R.id.tree_courses);
         ImageView expand = node.findViewById(R.id.tree_expand);
+        View header = node.findViewById(R.id.tree_header);
         Runnable applyExpanded = () -> {
             boolean expanded = !collapsed.contains(semester.id);
             courses.setVisibility(expanded ? View.VISIBLE : View.GONE);
             expand.setImageResource(expanded ? R.drawable.ic_expand_less : R.drawable.ic_expand_more);
-            expand.setContentDescription(expanded ? "Thu gọn" : "Mở rộng");
+            // The icon is decorative; TalkBack announces the state on the clickable header instead
+            ViewCompat.setStateDescription(header, getString(expanded ? R.string.expanded : R.string.collapsed));
         };
         applyExpanded.run();
-        node.findViewById(R.id.tree_header).setOnClickListener(v -> {
+        header.setOnClickListener(v -> {
             if (!collapsed.remove(semester.id)) collapsed.add(semester.id);
+            // Danh sách môn mở/đóng mượt và các học kỳ bên dưới trượt theo, thay vì nhảy ngay
+            TransitionManager.beginDelayedTransition(view.findViewById(R.id.semesters),
+                    new AutoTransition().setDuration(EXPAND_MS));
             applyExpanded.run();
         });
 
@@ -193,8 +218,8 @@ public class CurriculumFragment extends Fragment {
             row.findViewById(R.id.tree_dot).setBackground(dot);
             ((TextView) row.findViewById(R.id.tree_course_name)).setText(course.name);
             TextView meta = row.findViewById(R.id.tree_course_meta);
-            meta.setText(course.code + " • " + course.credits + " TC • "
-                    + (course.countInGpa ? "" : "Không tính GPA • ") + state.label);
+            meta.setText(getString(course.countInGpa ? R.string.course_meta_status : R.string.course_meta_status_no_gpa,
+                    course.code, course.credits, getString(state.label)));
             meta.setTextColor(color);
             Double score = GpaCalculator.courseScore(course);
             if (score != null) {
